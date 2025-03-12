@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 import {
   TextField,
   Button,
@@ -13,6 +14,7 @@ import GoogleIcon from "@mui/icons-material/Google";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setToken } = useContext(UserContext);
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState(false);
@@ -25,22 +27,20 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch(
-        `https://littleboxapi.azurewebsites.net/api/login?email=${encodeURIComponent(
-          form.email
-        )}&password=${encodeURIComponent(form.password)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch("http://localhost:5030/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
 
       const data = await response.json();
 
-      if (data.length > 0 && data[0].Result === 1) {
+      if (response.ok && data.token) {
         console.log("✅ Login exitoso");
+        setToken(data.token);
+        localStorage.setItem("token", data.token);
         setError(false);
         navigate("/home");
       } else {
@@ -98,7 +98,11 @@ export default function Login() {
             </Typography>
 
             {/* Formulario */}
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%", mt: 2 }}>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{ width: "100%", mt: 2 }}
+            >
               <TextField
                 label="Email"
                 name="email"
@@ -121,7 +125,11 @@ export default function Login() {
                 helperText={error ? "Correo o contraseña incorrectos" : ""}
               />
 
-              <Link href="#" underline="hover" sx={{ display: "block", textAlign: "right", mt: 1 }}>
+              <Link
+                href="#"
+                underline="hover"
+                sx={{ display: "block", textAlign: "right", mt: 1 }}
+              >
                 ¿Olvidaste tu contraseña?
               </Link>
 
