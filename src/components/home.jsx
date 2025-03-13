@@ -16,13 +16,13 @@ import {
   CardContent,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import PersonIcon from '@mui/icons-material/Person';
 import HomeIcon from "@mui/icons-material/Home";
 import StoreIcon from "@mui/icons-material/Store";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import LogoutIcon from "@mui/icons-material/Logout"; // Icono de salir
 
-// Ancho del sidebar
 const drawerWidth = 240;
-
 
 export default function Home() {
   const navigate = useNavigate();
@@ -32,7 +32,11 @@ export default function Home() {
     setMobileOpen(!mobileOpen);
   };
 
-  // Sidebar (Drawer) con menú
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Eliminar token
+    navigate("/login"); // Redirigir a login
+  };
+
   const drawer = (
     <Box
       sx={{
@@ -42,7 +46,6 @@ export default function Home() {
         backgroundColor: "#f5f5f5",
       }}
     >
-      {/* Logo */}
       <Box
         sx={{
           display: "flex",
@@ -51,23 +54,25 @@ export default function Home() {
           p: 2,
         }}
       >
-        <img
-          src="/viba1.png"
-          alt="Carnes ViBa"
-          style={{ width: "120px" }}
-        />
+        <img src="/viba1.png" alt="Carnes ViBa" style={{ width: "120px" }} />
       </Box>
       <Divider />
-      {/* Opciones de menú */}
       <List sx={{ flex: 1 }}>
         <ListItemButton>
           <HomeIcon sx={{ mr: 2 }} />
           <ListItemText primary="Dashboard" />
         </ListItemButton>
-        <ListItemButton onClick={() => navigate('/producto')}>
-        <StoreIcon sx={{ mr: 2 }} />
-        <ListItemText primary="Producto" />
+
+        <ListItemButton onClick={() => navigate('/usuarios-list')}>
+          <PersonIcon sx={{ mr: 2 }} />
+          <ListItemText primary="Usuarios" />
         </ListItemButton>
+
+        <ListItemButton onClick={() => navigate('/producto')}>
+          <StoreIcon sx={{ mr: 2 }} />
+          <ListItemText primary="Producto" />
+        </ListItemButton>
+
         <ListItemButton sx={{ pl: 4 }}>
           <ChevronRightIcon sx={{ mr: 1 }} />
           <ListItemText primary="Carne de res" />
@@ -86,7 +91,6 @@ export default function Home() {
         </ListItemButton>
       </List>
       <Divider />
-      {/* Footer de la barra lateral */}
       <Box sx={{ p: 2, textAlign: "center" }}>
         <Typography variant="caption" display="block">
           © 2025 Carnes ViBa
@@ -96,15 +100,7 @@ export default function Home() {
   );
 
   return (
-    <Box sx={{ 
-        display: "flex", 
-        height: "100vh",
-        width: "100vw",
-
-
-
-    }}>
-      {/* AppBar superior */}
+    <Box sx={{ display: "flex", height: "100vh", width: "100vw" }}>
       <AppBar
         position="fixed"
         sx={{
@@ -114,7 +110,6 @@ export default function Home() {
         }}
       >
         <Toolbar>
-          {/* Botón para abrir/cerrar el Drawer en móviles */}
           <IconButton
             color="inherit"
             edge="start"
@@ -123,29 +118,24 @@ export default function Home() {
           >
             <MenuIcon />
           </IconButton>
-          {/* Título principal */}
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Inicio
           </Typography>
-          {/* Sección a la derecha (ej. Cuenta/Logout) */}
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ cursor: "pointer" }}
-            onClick={() => navigate("/login")} // <--- Navegación al login
-            >
-            Cuenta
+          {/* Botón de logout en la barra superior */}
+          <IconButton color="inherit" onClick={handleLogout}>
+            <LogoutIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ cursor: "pointer" }} onClick={handleLogout}>
+            Salir
           </Typography>
         </Toolbar>
       </AppBar>
 
-      {/* Drawer lateral */}
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
         aria-label="sidebar"
       >
-        {/* Drawer para pantallas pequeñas */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -158,7 +148,6 @@ export default function Home() {
         >
           {drawer}
         </Drawer>
-        {/* Drawer para pantallas grandes */}
         <Drawer
           variant="permanent"
           sx={{
@@ -171,18 +160,16 @@ export default function Home() {
         </Drawer>
       </Box>
 
-      {/* Contenido principal */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
           p: 3,
-          mt: 8, // para dejar espacio debajo del AppBar
+          mt: 8,
           backgroundColor: "#fafafa",
           minHeight: "100vh",
         }}
       >
-        {/* Tarjetas de estadísticas */}
         <Grid container spacing={2}>
           <Grid item xs={6} md={3}>
             <Card>
@@ -221,55 +208,6 @@ export default function Home() {
                 <Typography variant="body2" color="text.secondary">
                   Ganancias totales
                 </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* Ejemplo de contenedor para gráficos / reportes */}
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: 300 }}>
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Predicción de demanda (Placeholder)
-                </Typography>
-                <Box
-                  sx={{
-                    backgroundColor: "#eee",
-                    height: "100%",
-                    mt: 2,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: 1,
-                  }}
-                >
-                  {/* Aquí iría tu componente de gráfico real */}
-                  <Typography variant="caption">contenido</Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: 300 }}>
-              <CardContent>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Tiempo en recibir un pedido (Placeholder)
-                </Typography>
-                <Box
-                  sx={{
-                    backgroundColor: "#eee",
-                    height: "100%",
-                    mt: 2,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    borderRadius: 1,
-                  }}
-                >
-                  <Typography variant="caption">contenido</Typography>
-                </Box>
               </CardContent>
             </Card>
           </Grid>

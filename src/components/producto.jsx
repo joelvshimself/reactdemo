@@ -21,6 +21,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import PetsIcon from "@mui/icons-material/Pets";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import EmojiNatureIcon from "@mui/icons-material/EmojiNature";
+import PersonIcon from "@mui/icons-material/Person";
 import ForestIcon from "@mui/icons-material/Forest";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
@@ -64,6 +65,11 @@ export default function Producto() {
         <ListItemButton onClick={() => navigate("/home")}>
           <HomeIcon sx={{ mr: 2 }} />
           <ListItemText primary="Dashboard" />
+        </ListItemButton>
+
+        <ListItemButton onClick={() => navigate('/usuarios-list')}>
+            <PersonIcon sx={{ mr: 2 }} />
+            <ListItemText primary="Usuarios" />
         </ListItemButton>
 
         <ListItemButton>

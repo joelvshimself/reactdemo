@@ -9,7 +9,7 @@ import { UserProvider, UserContext } from "./context/UserContext";
 import Login from "./components/login";
 import Home from "./components/home";
 import Producto from "./components/producto";
-import UsuariosCrud from "./components/UsuariosCrud";
+import UsersList from "./components/UsuariosList"; // Importamos el nuevo componente
 
 function ProtectedRoute({ element }) {
   const { token } = useContext(UserContext);
@@ -29,9 +29,8 @@ function App() {
             element={<ProtectedRoute element={<Producto />} />}
           />
           <Route
-            path="/usuarios"
-            element={<ProtectedRoute element={<UsuariosCrud />} />}
-          />
+            path="/usuarios-list"
+            element={<ProtectedRoute element={<UsersList />} />} /> {/* Nueva ruta */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>

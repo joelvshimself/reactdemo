@@ -17,7 +17,7 @@ export default function Login() {
   const { setToken } = useContext(UserContext);
 
   const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,6 +25,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Limpiar errores previos
 
     try {
       const response = await fetch("http://localhost:5030/login", {
@@ -38,30 +39,22 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok && data.token) {
-        console.log("✅ Login exitoso");
+        console.log("✅ Login exitoso:", data);
         setToken(data.token);
         localStorage.setItem("token", data.token);
-        setError(false);
         navigate("/home");
       } else {
-        console.log("❌ Credenciales incorrectas");
-        setError(true);
+        console.log("❌ Error de autenticación:", data);
+        setError(data.error || "Credenciales incorrectas");
       }
     } catch (err) {
-      console.error("Error al conectar con la API:", err);
-      setError(true);
+      console.error("⛔ Error al conectar con la API:", err);
+      setError("Error en la conexión. Intenta nuevamente.");
     }
   };
 
   return (
-    <Box
-      sx={{
-        height: "100vh",
-        width: "100vw",
-        display: "flex",
-        overflow: "hidden",
-      }}
-    >
+    <Box sx={{ height: "100vh", width: "100vw", display: "flex" }}>
       {/* Mitad Izquierda: Formulario */}
       <Box
         sx={{
@@ -86,23 +79,13 @@ export default function Login() {
               margin: "0 auto",
             }}
           >
-            {/* Logo */}
-            <img
-              src="/viba1.png"
-              alt="Carnes ViBa"
-              style={{ width: "150px", marginBottom: "20px" }}
-            />
+            <img src="/viba1.png" alt="Carnes ViBa" style={{ width: "150px", marginBottom: "20px" }} />
 
             <Typography variant="h5" fontWeight="bold" color="text.primary">
               Iniciar Sesión
             </Typography>
 
-            {/* Formulario */}
-            <Box
-              component="form"
-              onSubmit={handleSubmit}
-              sx={{ width: "100%", mt: 2 }}
-            >
+            <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%", mt: 2 }}>
               <TextField
                 label="Email"
                 name="email"
@@ -111,7 +94,7 @@ export default function Login() {
                 onChange={handleChange}
                 fullWidth
                 margin="normal"
-                error={error}
+                error={!!error}
               />
               <TextField
                 label="Contraseña"
@@ -121,15 +104,11 @@ export default function Login() {
                 onChange={handleChange}
                 fullWidth
                 margin="normal"
-                error={error}
-                helperText={error ? "Correo o contraseña incorrectos" : ""}
+                error={!!error}
+                helperText={error}
               />
 
-              <Link
-                href="#"
-                underline="hover"
-                sx={{ display: "block", textAlign: "right", mt: 1 }}
-              >
+              <Link href="#" underline="hover" sx={{ display: "block", textAlign: "right", mt: 1 }}>
                 ¿Olvidaste tu contraseña?
               </Link>
 
