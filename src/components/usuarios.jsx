@@ -24,6 +24,10 @@ export default function Usuarios() {
     const [usuariosSeleccionados, setUsuariosSeleccionados] = useState([]);
     const [ordenNombre, setOrdenNombre] = useState(null);
     const [busqueda, setBusqueda] = useState("");
+    const [ordenCorreo, setOrdenCorreo] = useState(null);
+    const [ordenTipo, setOrdenTipo] = useState(null);
+
+
 
 
 
@@ -222,28 +226,85 @@ export default function Usuarios() {
                     <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "sans-serif" }}>
                         <thead style={{ backgroundColor: "#f5f5f5" }}>
                             <tr>
-                                <th style={{ padding: "12px" }}></th> {/* espacio vacío para alinear con checkboxes */}
-                                <th style={{ textAlign: "left", padding: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
-                                    Nombre
-                                    <select
-                                        value={ordenNombre || ""}
-                                        onChange={(e) => setOrdenNombre(e.target.value)}
-                                        style={{
-                                            border: "none",
-                                            background: "transparent",
-                                            fontSize: "0.9rem",
-                                            cursor: "pointer",
-                                            color: "#000", // color del texto seleccionado
-                                            fontWeight: "bold"
-                                        }}
-                                    >
-                                        <option value="">⇅</option>
-                                        <option value="asc">↑ A-Z</option>
-                                        <option value="desc">↓ Z-A</option>
-                                    </select>
+                                <th style={{ padding: "12px" }}></th> {/* Para el checkbox */}
+
+                                <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                        Nombre
+                                        <select
+                                            value={ordenNombre || ""}
+                                            onChange={(e) => {
+                                                setOrdenNombre(e.target.value);
+                                                setOrdenCorreo(null); // limpiar orden de correo si ordenamos por nombre
+                                            }}
+                                            style={{
+                                                border: "1px solid #ccc",
+                                                background: "white",
+                                                fontSize: "0.9rem",
+                                                cursor: "pointer",
+                                                color: "#000",
+                                                fontWeight: "bold",
+                                                borderRadius: "4px",
+                                            }}
+                                        >
+                                            <option value="">⇅</option>
+                                            <option value="asc">↑ A-Z</option>
+                                            <option value="desc">↓ Z-A</option>
+                                        </select>
+                                    </div>
                                 </th>
-                                <th style={{ textAlign: "left", padding: "12px" }}>Correo</th>
-                                <th style={{ textAlign: "left", padding: "12px" }}>Tipo</th>
+
+                                <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                        Correo
+                                        <select
+                                            value={ordenCorreo || ""}
+                                            onChange={(e) => {
+                                                setOrdenCorreo(e.target.value);
+                                                setOrdenNombre(null); // limpiar orden de nombre si ordenamos por correo
+                                            }}
+                                            style={{
+                                                border: "1px solid #ccc",
+                                                background: "white",
+                                                fontSize: "0.9rem",
+                                                cursor: "pointer",
+                                                color: "#000",
+                                                fontWeight: "bold",
+                                                borderRadius: "4px",
+                                            }}
+                                        >
+                                            <option value="">⇅</option>
+                                            <option value="asc">↑ A-Z</option>
+                                            <option value="desc">↓ Z-A</option>
+                                        </select>
+                                    </div>
+                                </th>
+                                <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                        Tipo
+                                        <select
+                                            value={ordenTipo || ""}
+                                            onChange={(e) => {
+                                                setOrdenTipo(e.target.value);
+                                                setOrdenNombre(null);
+                                                setOrdenCorreo(null);
+                                            }}
+                                            style={{
+                                                border: "1px solid #ccc",
+                                                background: "white",
+                                                fontSize: "0.9rem",
+                                                cursor: "pointer",
+                                                color: "#000",
+                                                fontWeight: "bold",
+                                                borderRadius: "4px",
+                                            }}
+                                        >
+                                            <option value="">⇅</option>
+                                            <option value="asc">↑ A-Z</option>
+                                            <option value="desc">↓ Z-A</option>
+                                        </select>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -252,8 +313,21 @@ export default function Usuarios() {
                                     u.nombre.toLowerCase().includes(busqueda.toLowerCase())
                                 )
                                 .sort((a, b) => {
-                                    if (ordenNombre === 'asc') return a.nombre.localeCompare(b.nombre);
-                                    if (ordenNombre === 'desc') return b.nombre.localeCompare(a.nombre);
+                                    if (ordenNombre) {
+                                        return ordenNombre === 'asc'
+                                            ? a.nombre.localeCompare(b.nombre)
+                                            : b.nombre.localeCompare(a.nombre);
+                                    }
+                                    if (ordenCorreo) {
+                                        return ordenCorreo === 'asc'
+                                            ? a.correo.localeCompare(b.correo)
+                                            : b.correo.localeCompare(a.correo);
+                                    }
+                                    if (ordenTipo) {
+                                        return ordenTipo === 'asc'
+                                          ? a.rol.localeCompare(b.rol)
+                                          : b.rol.localeCompare(a.rol);
+                                      }
                                     return 0;
                                 })
                                 .map((usuario) => (
