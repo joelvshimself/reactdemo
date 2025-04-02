@@ -80,7 +80,7 @@ export default function Home() {
         {/* Tarjetas resumen */}
         <Grid container spacing={2}>
           {[
-            { title: "75", subtitle: "Ordenes totales" },
+            { title: "75", subtitle: "c1" },
             { title: "357", subtitle: "Proveedores totales" },
             { title: "65", subtitle: "Ordenes canceladas" },
             { title: "$128", subtitle: "Ganancias totales" },
