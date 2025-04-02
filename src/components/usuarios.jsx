@@ -22,6 +22,10 @@ export default function Usuarios() {
     const [openEditar, setOpenEditar] = useState(false);
     const [usuarioEditar, setUsuarioEditar] = useState(null);
     const [usuariosSeleccionados, setUsuariosSeleccionados] = useState([]);
+    const [ordenNombre, setOrdenNombre] = useState(null);
+    const [busqueda, setBusqueda] = useState("");
+
+
 
 
 
@@ -186,6 +190,8 @@ export default function Usuarios() {
                         placeholder="Buscar por Nombre"
                         style={{ width: "300px" }}
                         icon="search"
+                        value={busqueda}
+                        onInput={(e) => setBusqueda(e.target.value)}
                     />
                     <FlexBox direction="Row" wrap style={{ gap: "0.5rem" }}>
                         <Button
@@ -217,48 +223,75 @@ export default function Usuarios() {
                         <thead style={{ backgroundColor: "#f5f5f5" }}>
                             <tr>
                                 <th style={{ padding: "12px" }}></th> {/* espacio vacío para alinear con checkboxes */}
-                                <th style={{ textAlign: "left", padding: "12px" }}>Nombre</th>
+                                <th style={{ textAlign: "left", padding: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                    Nombre
+                                    <select
+                                        value={ordenNombre || ""}
+                                        onChange={(e) => setOrdenNombre(e.target.value)}
+                                        style={{
+                                            border: "none",
+                                            background: "transparent",
+                                            fontSize: "0.9rem",
+                                            cursor: "pointer",
+                                            color: "#000", // color del texto seleccionado
+                                            fontWeight: "bold"
+                                        }}
+                                    >
+                                        <option value="">⇅</option>
+                                        <option value="asc">↑ A-Z</option>
+                                        <option value="desc">↓ Z-A</option>
+                                    </select>
+                                </th>
                                 <th style={{ textAlign: "left", padding: "12px" }}>Correo</th>
                                 <th style={{ textAlign: "left", padding: "12px" }}>Tipo</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {usuarios.map((usuario) => (
-                                <tr key={usuario.id} style={{ borderBottom: "1px solid #eee" }}>
-                                    <td style={{ padding: "12px" }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={usuariosSeleccionados.includes(usuario.id)}
-                                            onChange={(e) => {
-                                                const checked = e.target.checked;
-                                                if (checked) {
-                                                    setUsuariosSeleccionados([...usuariosSeleccionados, usuario.id]);
-                                                } else {
-                                                    setUsuariosSeleccionados(usuariosSeleccionados.filter(id => id !== usuario.id));
-                                                }
-                                            }}
-                                        />
+                            {[...usuarios]
+                                .filter((u) =>
+                                    u.nombre.toLowerCase().includes(busqueda.toLowerCase())
+                                )
+                                .sort((a, b) => {
+                                    if (ordenNombre === 'asc') return a.nombre.localeCompare(b.nombre);
+                                    if (ordenNombre === 'desc') return b.nombre.localeCompare(a.nombre);
+                                    return 0;
+                                })
+                                .map((usuario) => (
+                                    <tr key={usuario.id} style={{ borderBottom: "1px solid #eee" }}>
+                                        <td style={{ padding: "12px" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={usuariosSeleccionados.includes(usuario.id)}
+                                                onChange={(e) => {
+                                                    const checked = e.target.checked;
+                                                    if (checked) {
+                                                        setUsuariosSeleccionados([...usuariosSeleccionados, usuario.id]);
+                                                    } else {
+                                                        setUsuariosSeleccionados(usuariosSeleccionados.filter(id => id !== usuario.id));
+                                                    }
+                                                }}
+                                            />
 
-                                    </td>
-                                    <td style={{ padding: "12px" }}>{usuario.nombre}</td>
-                                    <td style={{ padding: "12px" }}>{usuario.correo}</td>
-                                    <td style={{ padding: "12px" }}>
-                                        <span
-                                            style={{
-                                                backgroundColor:
-                                                    usuario.rol.toLowerCase() === "admin" ? "#e0d4fc" : "#d0fce0",
-                                                color: "#000",
-                                                padding: "4px 10px",
-                                                borderRadius: "12px",
-                                                fontSize: "0.8rem",
-                                                fontWeight: 500,
-                                            }}
-                                        >
-                                            {usuario.rol}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td style={{ padding: "12px" }}>{usuario.nombre}</td>
+                                        <td style={{ padding: "12px" }}>{usuario.correo}</td>
+                                        <td style={{ padding: "12px" }}>
+                                            <span
+                                                style={{
+                                                    backgroundColor:
+                                                        usuario.rol.toLowerCase() === "admin" ? "#e0d4fc" : "#d0fce0",
+                                                    color: "#000",
+                                                    padding: "4px 10px",
+                                                    borderRadius: "12px",
+                                                    fontSize: "0.8rem",
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                {usuario.rol}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
                         </tbody>
                     </table>
                 </Card>
