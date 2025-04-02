@@ -1,11 +1,16 @@
-name: Build and Test
+name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,5 +31,17 @@ jobs:
       - name: Run Tests
         run: npm test
 
-      - name: Build
+      - name: Build Project
         run: npm run build
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Info
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Vercel Build
+        run: vercel build --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}

@@ -42,7 +42,7 @@ export default function Login() {
       const data = await response.json();
 
       if (data.length > 0 && data[0].Result === 1) {
-        console.log("✅ Login exitoso");
+        console.log("Login exitoso");
         setError(false);
         localStorage.setItem("auth", "true");
         navigate("/home");
