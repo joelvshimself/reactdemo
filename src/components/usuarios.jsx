@@ -61,6 +61,9 @@ export default function Usuarios() {
     }, []);
 
     const agregarUsuario = async () => {
+        if (!nuevoUsuario.rol) {
+            setNuevoUsuario({ ...nuevoUsuario, rol: "Owner" }); // Valor predeterminado
+        }
         const nuevo = {
             nombre: nuevoUsuario.nombre,
             email: nuevoUsuario.correo,
@@ -70,7 +73,7 @@ export default function Usuarios() {
         const ok = await createUsuario(nuevo);
         if (ok) {
             await loadUsuarios();
-            setNuevoUsuario({ nombre: "", correo: "", rol: "" });
+            setNuevoUsuario({ nombre: "", correo: "", rol: "Owner" }); // Reinicia con valor predeterminado
         }
     };
 
@@ -83,16 +86,23 @@ export default function Usuarios() {
     };
 
     const handleEditarGuardar = async () => {
+        if (!usuarioEditar) return;
+
         const actualizado = {
             nombre: usuarioEditar.nombre,
             email: usuarioEditar.correo,
-            password: "", // no cambia si no se especifica
+            password: "", // No cambia si no se especifica
             rol: usuarioEditar.rol
         };
-        await updateUsuario(usuarioEditar.id, actualizado);
-        setOpenEditar(false);
-        await loadUsuarios();
-        setUsuariosSeleccionados([]);
+
+        const ok = await updateUsuario(usuarioEditar.id, actualizado);
+        if (ok) {
+            await loadUsuarios(); // Recarga la lista de usuarios desde la base de datos
+            setOpenEditar(false); // Cierra el modal
+            setUsuariosSeleccionados([]); // Limpia la selección
+        } else {
+            console.error("Error al actualizar el usuario");
+        }
     };
 
 
@@ -100,7 +110,7 @@ export default function Usuarios() {
     const [nuevoUsuario, setNuevoUsuario] = useState({
         nombre: "",
         correo: "",
-        rol: ""
+        rol: "Owner" // Valor predeterminado
     });
 
     const handleNavigationClick = (event) => {
@@ -137,10 +147,16 @@ export default function Usuarios() {
                 value={nuevoUsuario.correo}
                 onInput={handleInputChange}
             />
-            <Select name="rol" value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}>
-                <Option>Owner</Option>
-                <Option>Proveedor</Option>
-                <Option>Detallista</Option>
+            <Select
+                name="rol"
+                value={nuevoUsuario.rol}
+                onChange={(e) =>
+                    setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })
+                }
+            >
+                <Option value="Owner">Owner</Option>
+                <Option value="Proveedor">Proveedor</Option>
+                <Option value="Detallista">Detallista</Option>
             </Select>
         </FlexBox>
     </Dialog>
@@ -167,12 +183,14 @@ export default function Usuarios() {
                     onInput={(e) => setUsuarioEditar({ ...usuarioEditar, correo: e.target.value })}
                 />
                 <Select
-                    value={usuarioEditar.rol}
-                    onChange={(e) => setUsuarioEditar({ ...usuarioEditar, rol: e.target.value })}
+                    value={usuarioEditar?.rol || "Owner"} // Valor predeterminado si está vacío
+                    onChange={(e) =>
+                        setUsuarioEditar({ ...usuarioEditar, rol: e.target.value })
+                    }
                 >
-                    <Option>Owner</Option>
-                    <Option>Proveedor</Option>
-                    <Option>Detallista</Option>
+                    <Option value="Owner">Owner</Option>
+                    <Option value="Proveedor">Proveedor</Option>
+                    <Option value="Detallista">Detallista</Option>
                 </Select>
             </FlexBox>
         )}
@@ -267,153 +285,190 @@ export default function Usuarios() {
 
                 {/* Tabla de usuarios */}
                 <Card style={{ padding: "1rem", marginTop: "1rem" }}>
-                    <Title level="H5" style={{ marginBottom: "1rem", padding: "12px" }}>Base de Datos de Usuarios</Title>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "sans-serif" }}>
-                        <thead style={{ backgroundColor: "#f5f5f5" }}>
-                            <tr>
-                                <th style={{ padding: "12px" }}></th> {/* Para el checkbox */}
+  <Title level="H5" style={{ marginBottom: "1rem", padding: "12px" }}>
+    Base de Datos de Usuarios
+  </Title>
+  <div style={{ overflowY: "auto", maxHeight: "520px" }}>
+    <table
+      style={{
+        width: "100%",
+        borderCollapse: "collapse",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <thead style={{ backgroundColor: "#f5f5f5" }}>
+        <tr>
+          <th style={{ padding: "12px" }}></th>
+          <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              Nombre
+              <select
+                value={ordenNombre || ""}
+                onChange={(e) => {
+                  setOrdenNombre(e.target.value);
+                  setOrdenCorreo(null);
+                }}
+                style={{
+                  border: "1px solid #ccc",
+                  background: "white",
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  color: "#000",
+                  fontWeight: "bold",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="">⇅</option>
+                <option value="asc">↑ A-Z</option>
+                <option value="desc">↓ Z-A</option>
+              </select>
+            </div>
+          </th>
+          <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              Correo
+              <select
+                value={ordenCorreo || ""}
+                onChange={(e) => {
+                  setOrdenCorreo(e.target.value);
+                  setOrdenNombre(null);
+                }}
+                style={{
+                  border: "1px solid #ccc",
+                  background: "white",
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  color: "#000",
+                  fontWeight: "bold",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="">⇅</option>
+                <option value="asc">↑ A-Z</option>
+                <option value="desc">↓ Z-A</option>
+              </select>
+            </div>
+          </th>
+          <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              Tipo
+              <select
+                value={ordenTipo || ""}
+                onChange={(e) => {
+                  setOrdenTipo(e.target.value);
+                  setOrdenNombre(null);
+                  setOrdenCorreo(null);
+                }}
+                style={{
+                  border: "1px solid #ccc",
+                  background: "white",
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  color: "#000",
+                  fontWeight: "bold",
+                  borderRadius: "4px",
+                }}
+              >
+                <option value="">⇅</option>
+                <option value="asc">↑ A-Z</option>
+                <option value="desc">↓ Z-A</option>
+              </select>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {[...usuarios]
+          .filter((u) =>
+            u.nombre.toLowerCase().includes(busqueda.toLowerCase())
+          )
+          .sort((a, b) => {
+            if (ordenNombre) {
+              return ordenNombre === "asc"
+                ? a.nombre.localeCompare(b.nombre)
+                : b.nombre.localeCompare(a.nombre);
+            }
+            if (ordenCorreo) {
+              return ordenCorreo === "asc"
+                ? a.correo.localeCompare(b.correo)
+                : b.correo.localeCompare(a.correo);
+            }
+            if (ordenTipo) {
+              return ordenTipo === "asc"
+                ? a.rol.localeCompare(b.rol)
+                : b.rol.localeCompare(a.rol);
+            }
+            return 0;
+          })
+          .map((usuario) => (
+            <tr key={usuario.id} style={{ borderBottom: "1px solid #eee" }}>
+              <td style={{ padding: "12px" }}>
+                <input
+                  type="checkbox"
+                  checked={usuariosSeleccionados.includes(usuario.id)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                      setUsuariosSeleccionados([
+                        ...usuariosSeleccionados,
+                        usuario.id,
+                      ]);
+                    } else {
+                      setUsuariosSeleccionados(
+                        usuariosSeleccionados.filter((id) => id !== usuario.id)
+                      );
+                    }
+                  }}
+                />
+              </td>
+              <td style={{ padding: "12px" }}>{usuario.nombre}</td>
+              <td style={{ padding: "12px" }}>{usuario.correo}</td>
+              <td style={{ padding: "12px" }}>
+                <span
+                  style={{
+                    backgroundColor:
+                      usuario.rol.toLowerCase() === "owner"
+                        ? "#e0d4fc"
+                        : usuario.rol.toLowerCase() === "proveedor"
+                        ? "#d0fce0"
+                        : usuario.rol.toLowerCase() === "detallista"
+                        ? "#ffe0b2"
+                        : "#f5f5f5",
+                    color: "#000",
+                    padding: "4px 10px",
+                    borderRadius: "12px",
+                    fontSize: "0.8rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {usuario.rol}
+                </span>
+              </td>
+            </tr>
+          ))}
+      </tbody>
+    </table>
+  </div>
+</Card>
 
-                                <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        Nombre
-                                        <select
-                                            value={ordenNombre || ""}
-                                            onChange={(e) => {
-                                                setOrdenNombre(e.target.value);
-                                                setOrdenCorreo(null); // limpiar orden de correo si ordenamos por nombre
-                                            }}
-                                            style={{
-                                                border: "1px solid #ccc",
-                                                background: "white",
-                                                fontSize: "0.9rem",
-                                                cursor: "pointer",
-                                                color: "#000",
-                                                fontWeight: "bold",
-                                                borderRadius: "4px",
-                                            }}
-                                        >
-                                            <option value="">⇅</option>
-                                            <option value="asc">↑ A-Z</option>
-                                            <option value="desc">↓ Z-A</option>
-                                        </select>
-                                    </div>
-                                </th>
-
-                                <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        Correo
-                                        <select
-                                            value={ordenCorreo || ""}
-                                            onChange={(e) => {
-                                                setOrdenCorreo(e.target.value);
-                                                setOrdenNombre(null); // limpiar orden de nombre si ordenamos por correo
-                                            }}
-                                            style={{
-                                                border: "1px solid #ccc",
-                                                background: "white",
-                                                fontSize: "0.9rem",
-                                                cursor: "pointer",
-                                                color: "#000",
-                                                fontWeight: "bold",
-                                                borderRadius: "4px",
-                                            }}
-                                        >
-                                            <option value="">⇅</option>
-                                            <option value="asc">↑ A-Z</option>
-                                            <option value="desc">↓ Z-A</option>
-                                        </select>
-                                    </div>
-                                </th>
-                                <th style={{ textAlign: "left", padding: "12px", color: "#000" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        Tipo
-                                        <select
-                                            value={ordenTipo || ""}
-                                            onChange={(e) => {
-                                                setOrdenTipo(e.target.value);
-                                                setOrdenNombre(null);
-                                                setOrdenCorreo(null);
-                                            }}
-                                            style={{
-                                                border: "1px solid #ccc",
-                                                background: "white",
-                                                fontSize: "0.9rem",
-                                                cursor: "pointer",
-                                                color: "#000",
-                                                fontWeight: "bold",
-                                                borderRadius: "4px",
-                                            }}
-                                        >
-                                            <option value="">⇅</option>
-                                            <option value="asc">↑ A-Z</option>
-                                            <option value="desc">↓ Z-A</option>
-                                        </select>
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {[...usuarios]
-                                .filter((u) =>
-                                    u.nombre.toLowerCase().includes(busqueda.toLowerCase())
-                                )
-                                .sort((a, b) => {
-                                    if (ordenNombre) {
-                                        return ordenNombre === 'asc'
-                                            ? a.nombre.localeCompare(b.nombre)
-                                            : b.nombre.localeCompare(a.nombre);
-                                    }
-                                    if (ordenCorreo) {
-                                        return ordenCorreo === 'asc'
-                                            ? a.correo.localeCompare(b.correo)
-                                            : b.correo.localeCompare(a.correo);
-                                    }
-                                    if (ordenTipo) {
-                                        return ordenTipo === 'asc'
-                                            ? a.rol.localeCompare(b.rol)
-                                            : b.rol.localeCompare(a.rol);
-                                    }
-                                    return 0;
-                                })
-                                .map((usuario) => (
-                                    <tr key={usuario.id} style={{ borderBottom: "1px solid #eee" }}>
-                                        <td style={{ padding: "12px" }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={usuariosSeleccionados.includes(usuario.id)}
-                                                onChange={(e) => {
-                                                    const checked = e.target.checked;
-                                                    if (checked) {
-                                                        setUsuariosSeleccionados([...usuariosSeleccionados, usuario.id]);
-                                                    } else {
-                                                        setUsuariosSeleccionados(usuariosSeleccionados.filter(id => id !== usuario.id));
-                                                    }
-                                                }}
-                                            />
-
-                                        </td>
-                                        <td style={{ padding: "12px" }}>{usuario.nombre}</td>
-                                        <td style={{ padding: "12px" }}>{usuario.correo}</td>
-                                        <td style={{ padding: "12px" }}>
-                                            <span
-                                                style={{
-                                                    backgroundColor:
-                                                        usuario.rol.toLowerCase() === "admin" ? "#e0d4fc" : "#d0fce0",
-                                                    color: "#000",
-                                                    padding: "4px 10px",
-                                                    borderRadius: "12px",
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 500,
-                                                }}
-                                            >
-                                                {usuario.rol}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                        </tbody>
-                    </table>
-                </Card>
 
                 {/* MODAL: Crear Usuario */}
                 <Dialog
@@ -441,9 +496,9 @@ export default function Usuarios() {
                             onInput={handleInputChange}
                         />
                         <Select name="rol" value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}>
-                            <Option>Owner</Option>
-                            <Option>Proveedor</Option>
-                            <Option>Detallista</Option>
+                            <Option value="Owner">Owner</Option>
+                            <Option value="Proveedor">Proveedor</Option>
+                            <Option value="Detallista">Detallista</Option>
                         </Select>
                     </FlexBox>
                 </Dialog>
@@ -454,10 +509,9 @@ export default function Usuarios() {
                     open={openEditar}
                     onAfterClose={() => setOpenEditar(false)}
                     footer={
-                        <Button design="Emphasized" onClick={() => {
-                            setUsuarios(usuarios.map(u => u.id === usuarioEditar.id ? usuarioEditar : u));
-                            setOpenEditar(false);
-                        }}>Guardar</Button>
+                        <Button design="Emphasized" onClick={handleEditarGuardar}>
+                            Guardar
+                        </Button>
                     }
                 >
                     {usuarioEditar && (
@@ -473,12 +527,12 @@ export default function Usuarios() {
                                 onInput={(e) => setUsuarioEditar({ ...usuarioEditar, correo: e.target.value })}
                             />
                             <Select
-                                value={usuarioEditar.rol}
+                                value={usuarioEditar?.rol || "Owner"} // Valor predeterminado si está vacío
                                 onChange={(e) => setUsuarioEditar({ ...usuarioEditar, rol: e.target.value })}
                             >
-                                <Option>Owner</Option>
-                                <Option>Proveedor</Option>
-                                <Option>Detallista</Option>
+                                <Option value="Owner">Owner</Option>
+                                <Option value="Proveedor">Proveedor</Option>
+                                <Option value="Detallista">Detallista</Option>
                             </Select>
                         </FlexBox>
                     )}

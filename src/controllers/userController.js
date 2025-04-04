@@ -66,6 +66,7 @@ export const getUsers = async (req, res) => {
 
 
 // Obtener usuario por ID
+
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -106,6 +107,8 @@ export const createUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 
 // Actualizar usuario
