@@ -11,8 +11,7 @@ import {
 } from "@ui5/webcomponents-react";
 import GoogleIcon from "@mui/icons-material/Google";
 import { Button as MuiButton } from "@mui/material";
-
-
+import { login } from "../services/authService"; // Asegúrate que esta ruta sea correcta
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,32 +25,11 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const response = await fetch(
-        `https://littleboxapi.azurewebsites.net/api/login?email=${encodeURIComponent(
-          form.email
-        )}&password=${encodeURIComponent(form.password)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.length > 0 && data[0].Result === 1) {
-        console.log("Login exitoso");
-        setError(false);
-        localStorage.setItem("auth", "true");
-        navigate("/home");
-      } else {
-        console.log("❌ Credenciales incorrectas");
-        setError(true);
-      }
-    } catch (err) {
-      console.error("Error al conectar con la API:", err);
+    const result = await login(form.email, form.password);
+    if (result.success) {
+      setError(false);
+      navigate("/home");
+    } else {
       setError(true);
     }
   };
@@ -65,7 +43,7 @@ export default function Login() {
         overflow: "hidden",
       }}
     >
-      {/* Mitad Izquierda */}
+      {/* Mitad izquierda: formulario */}
       <FlexBox
         direction={FlexBoxDirection.Column}
         style={{
@@ -99,7 +77,9 @@ export default function Login() {
               name="email"
               placeholder="Email"
               value={form.email}
-              onInput={(e) => handleChange({ target: { name: "email", value: e.target.value } })}
+              onInput={(e) =>
+                handleChange({ target: { name: "email", value: e.target.value } })
+              }
               style={{ marginBottom: "1rem", width: "100%" }}
             />
             <Input
@@ -107,7 +87,9 @@ export default function Login() {
               type="Password"
               placeholder="Contraseña"
               value={form.password}
-              onInput={(e) => handleChange({ target: { name: "password", value: e.target.value } })}
+              onInput={(e) =>
+                handleChange({ target: { name: "password", value: e.target.value } })
+              }
               style={{ marginBottom: "0.5rem", width: "100%" }}
             />
             {error && (
@@ -153,21 +135,6 @@ export default function Login() {
             >
               Google
             </MuiButton>
-            <Button
-              style={{
-                width: "100%",
-                backgroundColor: "#6c757d",
-                color: "white",
-                fontSize: "16px",
-                marginTop: "12px",
-              }}
-              onClick={() => {
-                localStorage.setItem("auth", "guest");
-                navigate("/home");
-              }}
-            >
-              Ingresar como invitado
-            </Button>
           </form>
 
           <Text style={{ fontSize: "12px", textAlign: "center", marginTop: "1rem" }}>
@@ -178,7 +145,7 @@ export default function Login() {
         </FlexBox>
       </FlexBox>
 
-      {/* Mitad Derecha */}
+      {/* Mitad derecha: imagen */}
       <div
         style={{
           width: "50%",

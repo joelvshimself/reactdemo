@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FlexBox } from "@ui5/webcomponents-react";
 import { ShellBar, SideNavigation, SideNavigationItem } from "@ui5/webcomponents-react"
 import { Card, Title, Input } from "@ui5/webcomponents-react";
@@ -11,6 +11,14 @@ import "@ui5/webcomponents-icons/dist/navigation-right-arrow.js";
 import "@ui5/webcomponents-icons/dist/delete.js";
 import "@ui5/webcomponents-icons/dist/add.js";
 import { useNavigate } from "react-router-dom";
+import {
+    getUsuarios,
+    createUsuario,
+    updateUsuario,
+    deleteUsuario
+} from "../services/usersService";
+
+
 
 
 const drawerWidth = 240;
@@ -26,6 +34,8 @@ export default function Usuarios() {
     const [busqueda, setBusqueda] = useState("");
     const [ordenCorreo, setOrdenCorreo] = useState(null);
     const [ordenTipo, setOrdenTipo] = useState(null);
+    const [usuarios, setUsuarios] = useState([]);
+
 
 
 
@@ -34,10 +44,58 @@ export default function Usuarios() {
 
 
     //Placeholders
-    const [usuarios, setUsuarios] = useState([
-        { id: 1, nombre: "Juan Pérez", correo: "juan@example.com", rol: "Admin" },
-        { id: 2, nombre: "Ana Torres", correo: "ana@example.com", rol: "Vendedor" },
-    ]);
+    const loadUsuarios = async () => {
+        const data = await getUsuarios();
+        setUsuarios(
+            data.map((u) => ({
+                id: u.ID,
+                nombre: u.NOMBRE,
+                correo: u.EMAIL,
+                rol: u.ROL
+            }))
+        );
+    };
+
+    useEffect(() => {
+        loadUsuarios();
+    }, []);
+
+    const agregarUsuario = async () => {
+        const nuevo = {
+            nombre: nuevoUsuario.nombre,
+            email: nuevoUsuario.correo,
+            password: "123456",
+            rol: nuevoUsuario.rol
+        };
+        const ok = await createUsuario(nuevo);
+        if (ok) {
+            await loadUsuarios();
+            setNuevoUsuario({ nombre: "", correo: "", rol: "" });
+        }
+    };
+
+    const eliminarUsuariosSeleccionados = async () => {
+        for (let id of usuariosSeleccionados) {
+            await deleteUsuario(id);
+        }
+        setUsuariosSeleccionados([]);
+        await loadUsuarios();
+    };
+
+    const handleEditarGuardar = async () => {
+        const actualizado = {
+            nombre: usuarioEditar.nombre,
+            email: usuarioEditar.correo,
+            password: "", // no cambia si no se especifica
+            rol: usuarioEditar.rol
+        };
+        await updateUsuario(usuarioEditar.id, actualizado);
+        setOpenEditar(false);
+        await loadUsuarios();
+        setUsuariosSeleccionados([]);
+    };
+
+
 
     const [nuevoUsuario, setNuevoUsuario] = useState({
         nombre: "",
@@ -52,22 +110,6 @@ export default function Usuarios() {
 
     const handleInputChange = (e) => {
         setNuevoUsuario({ ...nuevoUsuario, [e.target.name]: e.target.value });
-    };
-
-    const agregarUsuario = () => {
-        if (nuevoUsuario.nombre && nuevoUsuario.correo && nuevoUsuario.rol) {
-            const nuevo = {
-                ...nuevoUsuario,
-                id: usuarios.length + 1
-            };
-            setUsuarios([...usuarios, nuevo]);
-            setNuevoUsuario({ nombre: "", correo: "", rol: "" });
-        }
-    };
-
-    const eliminarUsuariosSeleccionados = () => {
-        setUsuarios(usuarios.filter((u) => !usuariosSeleccionados.includes(u.id)));
-        setUsuariosSeleccionados([]); // limpiar selección después de eliminar
     };
 
     {/* Box Crear Usuarios */ }
@@ -96,8 +138,9 @@ export default function Usuarios() {
                 onInput={handleInputChange}
             />
             <Select name="rol" value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}>
-                <Option>Admin</Option>
+                <Option>Owner</Option>
                 <Option>Proveedor</Option>
+                <Option>Detallista</Option>
             </Select>
         </FlexBox>
     </Dialog>
@@ -108,10 +151,7 @@ export default function Usuarios() {
         open={openEditar}
         onAfterClose={() => setOpenEditar(false)}
         footer={
-            <Button design="Emphasized" onClick={() => {
-                setUsuarios(usuarios.map(u => u.id === usuarioEditar.id ? usuarioEditar : u));
-                setOpenEditar(false);
-            }}>Guardar</Button>
+            <Button design="Emphasized" onClick={handleEditarGuardar}>Guardar</Button>
         }
     >
         {usuarioEditar && (
@@ -130,8 +170,9 @@ export default function Usuarios() {
                     value={usuarioEditar.rol}
                     onChange={(e) => setUsuarioEditar({ ...usuarioEditar, rol: e.target.value })}
                 >
-                    <Option>Admin</Option>
+                    <Option>Owner</Option>
                     <Option>Proveedor</Option>
+                    <Option>Detallista</Option>
                 </Select>
             </FlexBox>
         )}
@@ -210,9 +251,13 @@ export default function Usuarios() {
                         <Button
                             design="Attention"
                             icon="edit"
+                            disabled={usuariosSeleccionados.length !== 1} // Solo habilitado si hay uno
                             onClick={() => {
-                                if (usuarios.length > 0) setUsuarioEditar(usuarios[0]); // Por ahora el primero
-                                setOpenEditar(true);
+                                const userToEdit = usuarios.find(u => u.id === usuariosSeleccionados[0]);
+                                if (userToEdit) {
+                                    setUsuarioEditar(userToEdit);
+                                    setOpenEditar(true);
+                                }
                             }}
                         >
                             Editar
@@ -325,9 +370,9 @@ export default function Usuarios() {
                                     }
                                     if (ordenTipo) {
                                         return ordenTipo === 'asc'
-                                          ? a.rol.localeCompare(b.rol)
-                                          : b.rol.localeCompare(a.rol);
-                                      }
+                                            ? a.rol.localeCompare(b.rol)
+                                            : b.rol.localeCompare(a.rol);
+                                    }
                                     return 0;
                                 })
                                 .map((usuario) => (
@@ -396,8 +441,9 @@ export default function Usuarios() {
                             onInput={handleInputChange}
                         />
                         <Select name="rol" value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}>
-                            <Option>Admin</Option>
+                            <Option>Owner</Option>
                             <Option>Proveedor</Option>
+                            <Option>Detallista</Option>
                         </Select>
                     </FlexBox>
                 </Dialog>
@@ -430,8 +476,9 @@ export default function Usuarios() {
                                 value={usuarioEditar.rol}
                                 onChange={(e) => setUsuarioEditar({ ...usuarioEditar, rol: e.target.value })}
                             >
-                                <Option>Admin</Option>
+                                <Option>Owner</Option>
                                 <Option>Proveedor</Option>
+                                <Option>Detallista</Option>
                             </Select>
                         </FlexBox>
                     )}
