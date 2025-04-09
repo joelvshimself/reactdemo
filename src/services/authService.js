@@ -15,6 +15,7 @@ const login = async (email, password) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+      credentials: "include", // 👈🏻 Importante
     });
 
     const data = await response.json();
