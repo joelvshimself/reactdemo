@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as OIDCStrategy } from "passport-openidconnect";
 import dotenv from "dotenv";
-import { poolPromise } from "./config/dbConfig.js"; 
+import { poolPromise } from "./config/dbConfig.js";
 
 dotenv.config();
 
@@ -32,25 +32,31 @@ passport.use(
 
         console.log("✅ Email recibido desde SAP:", email);
 
+        // Verificamos en la base de datos, pero sin cortar el flujo
         const conn = await poolPromise;
         const stmt = await conn.prepare("SELECT * FROM Usuario WHERE email = ?");
         const result = await stmt.exec([email]);
 
-        if (!result || result.length === 0) {
+        if (result && result.length > 0) {
+          const userLocal = result[0];
+          console.log("✅ Usuario encontrado en la base local:", userLocal);
+
+          profile.localUser = {
+            id: userLocal.ID,
+            nombre: userLocal.NOMBRE,
+            email: userLocal.EMAIL,
+            rol: userLocal.ROL,
+            registrado: true,
+          };
+        } else {
           console.warn("⚠️ El usuario SAP no está registrado en la base local:", email);
-          return done(null, false, { message: "El usuario no existe en la base de datos local." });
+          profile.localUser = {
+            email,
+            registrado: false,
+          };
         }
 
-        const userLocal = result[0];
-        console.log("✅ Usuario encontrado en la base local:", userLocal);
-
-        profile.localUser = {
-          id: userLocal.ID,
-          nombre: userLocal.NOMBRE,
-          email: userLocal.EMAIL,
-          rol: userLocal.ROL,
-        };
-
+        // Continuamos el flujo sin importar si existe o no en la base local
         return done(null, profile);
       } catch (error) {
         console.error("❌ Error durante la verificación del usuario SAP:", error);
@@ -61,11 +67,19 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
-  done(null, user);
+  const sessionUser = {
+    email: user.localUser?.email || user.emails?.[0]?.value,
+    id: user.localUser?.id || user.id,
+    rol: user.localUser?.rol || 'Invitado',
+  };
+  console.log("✅ Usuario serializado en la sesión:", sessionUser);
+  done(null, sessionUser);
 });
 
 passport.deserializeUser((obj, done) => {
+  console.log("♻️ Usuario deserializado de la sesión:", obj);
   done(null, obj);
 });
+
 
 export default passport;

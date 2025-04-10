@@ -46,15 +46,12 @@ app.use('/api', userRoutes);
 
 // Rutas de login SAP
 app.get("/auth/sap", (req, res, next) => {
-  const userEmail = req.session.userEmail;
-  if (!userEmail) {
-    return res.redirect("http://localhost:5173/login");
-  }
-
   passport.authenticate("oidc", {
-    login_hint: userEmail,
+    prompt: 'login' // 🚀 Esto fuerza la pantalla de login limpia
   })(req, res, next);
 });
+
+
 
 app.get("/auth/callback",
   passport.authenticate("oidc", {
