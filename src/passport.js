@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as OIDCStrategy } from "passport-openidconnect";
 import dotenv from "dotenv";
 import { poolPromise } from "./config/dbConfig.js";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -17,22 +18,31 @@ passport.use(
       clientSecret: process.env.SAP_CLIENT_SECRET,
       callbackURL: process.env.SAP_CALLBACK_URL,
       scope: "openid email profile",
+      passReqToCallback: true,
+      response_type: "code id_token", // Opcional, pero ya lo dejamos
     },
-    async (issuer, profile, done) => {
+    async (req, issuer, userId, profile, accessToken, refreshToken, params, done) => {
       try {
-        console.log("🚀 Profile recibido desde SAP Identity Services:");
-        console.log(profile);
+        console.log("✅ Access Token recibido desde SAP:", accessToken);
 
-        const email = profile.emails?.[0]?.value;
+        // ✅ Guardamos el accessToken en la sesión para usarlo después en el redirect
+        req.session.accessToken = accessToken;
+        console.log("✅ Access Token guardado en sesión:", req.session.accessToken);
+
+        // ✅ Decodificamos el accessToken directamente
+        const decodedToken = jwt.decode(accessToken);
+        console.log("🧩 Access Token decodificado completo:", decodedToken);
+
+        const email = decodedToken?.mail;
 
         if (!email) {
-          console.error("❌ No se encontró el email en el profile:", profile);
+          console.error("❌ No se encontró el campo 'mail' en el access_token decodificado:", decodedToken);
           return done(new Error("No se pudo obtener el email del usuario SAP"), null);
         }
 
-        console.log("✅ Email recibido desde SAP:", email);
+        console.log("✅ Email extraído del access_token:", email);
 
-        // Verificamos en la base de datos, pero sin cortar el flujo
+        // ✅ Verificamos en la base de datos local
         const conn = await poolPromise;
         const stmt = await conn.prepare("SELECT * FROM Usuario WHERE email = ?");
         const result = await stmt.exec([email]);
@@ -56,7 +66,6 @@ passport.use(
           };
         }
 
-        // Continuamos el flujo sin importar si existe o no en la base local
         return done(null, profile);
       } catch (error) {
         console.error("❌ Error durante la verificación del usuario SAP:", error);
@@ -66,20 +75,21 @@ passport.use(
   )
 );
 
+// ✅ Serializamos la info del usuario en la sesión
 passport.serializeUser((user, done) => {
   const sessionUser = {
     email: user.localUser?.email || user.emails?.[0]?.value,
     id: user.localUser?.id || user.id,
-    rol: user.localUser?.rol || 'Invitado',
+    rol: user.localUser?.rol || "Invitado",
   };
   console.log("✅ Usuario serializado en la sesión:", sessionUser);
   done(null, sessionUser);
 });
 
+// ✅ Deserializamos la sesión
 passport.deserializeUser((obj, done) => {
   console.log("♻️ Usuario deserializado de la sesión:", obj);
   done(null, obj);
 });
-
 
 export default passport;

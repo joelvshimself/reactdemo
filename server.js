@@ -1,4 +1,4 @@
-import 'dotenv/config'; // Imports
+import 'dotenv/config'; // Imports 
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -7,7 +7,8 @@ import setupSwagger from './src/config/swaggerConfig.js';
 import session from "express-session";
 import passport from "./src/passport.js";
 import dotenv from "dotenv";
-
+import jwt from "jsonwebtoken";
+import { verifyToken } from './src/controllers/authController.js'; 
 dotenv.config();
 
 const app = express();
@@ -44,6 +45,9 @@ setupSwagger(app);
 // Rutas API
 app.use('/api', userRoutes);
 
+// ✅ Nueva ruta para verificar token recibido desde frontend
+app.post('/auth/verify', verifyToken);
+
 // Rutas de login SAP
 app.get("/auth/sap", (req, res, next) => {
   passport.authenticate("oidc", {
@@ -51,14 +55,30 @@ app.get("/auth/sap", (req, res, next) => {
   })(req, res, next);
 });
 
-
-
 app.get("/auth/callback",
   passport.authenticate("oidc", {
     failureRedirect: "http://localhost:5173/login",
-    successRedirect: "http://localhost:5173/home",
-  })
+  }),
+  (req, res) => {
+    const user = req.user;
+    const sessionUser = {
+      id: user.localUser?.id,
+      nombre: user.localUser?.nombre,
+      email: user.localUser?.email,
+      rol: user.localUser?.rol,
+    };
+
+    const internalToken = jwt.sign(sessionUser, process.env.JWT_SECRET, {
+      expiresIn: '2h',
+    });    
+
+    console.log("✅ Token interno generado:", internalToken);
+
+    res.redirect(`http://localhost:5173/home?internal_token=${internalToken}`);
+  }
 );
+
+
 
 app.get("/logout", (req, res) => {
   req.logout(() => {
