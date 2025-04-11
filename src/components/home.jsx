@@ -27,14 +27,14 @@ export default function Home() {
   useEffect(() => {
     const checkUser = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const tokenFromUrl = urlParams.get("internal_token"); // ✅ Cambiado a internal_token
+      const tokenFromUrl = urlParams.get("internal_token"); 
 
       if (tokenFromUrl) {
         console.log("✅ Token interno encontrado en URL:", tokenFromUrl);
         localStorage.setItem("token", tokenFromUrl);
         // Limpiamos la URL después de guardar el token
         window.history.replaceState({}, document.title, "/home");
-        return setTimeout(checkUser, 0); // ✅ Reintentamos ahora desde localStorage
+        return setTimeout(checkUser, 0); 
       }
 
       const token = localStorage.getItem("token");

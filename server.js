@@ -14,28 +14,25 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ CORS bien configurado (solo una vez)
 app.use(cors({
   origin: 'http://localhost:5173', // Frontend
-  credentials: true // Cookies cross-origin
+  credentials: true // Cookies 
 }));
 
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Configuración de sesión
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // true si usas HTTPS
+    secure: false,
     httpOnly: true,
-    sameSite: 'lax' // Importante para cross-origin
+    sameSite: 'lax' 
   }
 }));
 
-// Inicializar Passport y sesiones
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -45,13 +42,13 @@ setupSwagger(app);
 // Rutas API
 app.use('/api', userRoutes);
 
-// ✅ Nueva ruta para verificar token recibido desde frontend
+
 app.post('/auth/verify', verifyToken);
 
 // Rutas de login SAP
 app.get("/auth/sap", (req, res, next) => {
   passport.authenticate("oidc", {
-    prompt: 'login' // 🚀 Esto fuerza la pantalla de login limpia
+    prompt: 'login' 
   })(req, res, next);
 });
 
@@ -72,7 +69,7 @@ app.get("/auth/callback",
       expiresIn: '2h',
     });    
 
-    console.log("✅ Token interno generado:", internalToken);
+    console.log("Token interno generado:", internalToken);
 
     res.redirect(`http://localhost:5173/home?internal_token=${internalToken}`);
   }

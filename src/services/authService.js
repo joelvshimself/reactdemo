@@ -11,20 +11,20 @@ const getInternalToken = () => localStorage.getItem("internalToken");
 // ✅ Eliminar tokens
 const removeToken = () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("internalToken"); // ✅ Eliminamos ambos
+  localStorage.removeItem("internalToken"); 
 };
 
-// ✅ Verificar si el usuario está autenticado
-const isAuthenticated = () => !!getInternalToken(); // ✅ Verificamos por el token interno
+//Verificar si el usuario está autenticado
+const isAuthenticated = () => !!getInternalToken(); 
 
-// ✅ Verificar token de SAP IAS y obtener token interno del backend
+//Verificar token de SAP IAS y obtener token interno del backend
 const verifySapToken = async (sapToken) => {
   try {
     const response = await fetch(`${API_URL}/auth/verify`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${sapToken}`, // ✅ Así lo enviamos como debe ser
+        "Authorization": `Bearer ${sapToken}`, 
       },
       credentials: "include",
     });
@@ -32,8 +32,8 @@ const verifySapToken = async (sapToken) => {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      setToken(sapToken); // Opcional, por si quieres mantenerlo para otros flujos
-      setInternalToken(data.internalToken); // ✅ Guardamos el token interno firmado por nuestro backend
+      setToken(sapToken); 
+      setInternalToken(data.internalToken); 
       return { success: true, user: data.user };
     } else {
       return { success: false, message: data.message };
@@ -44,12 +44,12 @@ const verifySapToken = async (sapToken) => {
   }
 };
 
-// ✅ Logout del frontend (limpia ambos tokens locales)
+//Logout 
 const logout = () => {
   removeToken();
 };
 
-// ✅ Exportamos todas las funciones
+
 export {
   verifySapToken,
   logout,

@@ -3,12 +3,12 @@ import jwksClient from 'jwks-rsa';
 
 // Validamos que las variables existan para evitar errores
 if (!process.env.SAP_IAS_JWKS_URI) {
-  console.error("❌ Falta la variable SAP_IAS_JWKS_URI en .env");
+  console.error("Falta la variable SAP_IAS_JWKS_URI en .env");
   process.exit(1);
 }
 
 if (!process.env.JWT_SECRET) {
-  console.error("❌ Falta la variable JWT_SECRET en .env");
+  console.error("Falta la variable JWT_SECRET en .env");
   process.exit(1);
 }
 
@@ -40,7 +40,7 @@ export const authenticateToken = (req, res, next) => {
   const isSapToken = (token) => {
     try {
       const decoded = jwt.decode(token, { complete: true });
-      return !!decoded?.header?.kid; // Si tiene kid, es SAP IAS
+      return !!decoded?.header?.kid; // Si tiene .kid, es SAP IAS
     } catch (e) {
       return false;
     }
@@ -50,10 +50,10 @@ export const authenticateToken = (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
-      console.log("✅ Token interno válido:", decoded);
+      console.log("Token interno válido:", decoded);
       return next();
     } catch (internalError) {
-      console.error("❌ Token interno inválido:", internalError.message);
+      console.error("Token interno inválido:", internalError.message);
       return res.status(401).json({ message: "Token interno inválido" });
     }
   }
@@ -61,12 +61,12 @@ export const authenticateToken = (req, res, next) => {
   // Si es token SAP, usamos JWKS
   jwt.verify(token, getKey, (err, decoded) => {
     if (err) {
-      console.error("❌ Token SAP IAS inválido:", err.message);
+      console.error("Token SAP IAS inválido:", err.message);
       return res.status(401).json({ message: "Token SAP IAS inválido" });
     }
 
     req.user = decoded;
-    console.log("✅ Token SAP IAS válido:", decoded);
+    console.log("Token SAP IAS válido:", decoded);
     next();
   });
 };

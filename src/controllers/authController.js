@@ -17,13 +17,13 @@ export async function verifyToken(req, res) {
       return res.status(401).json({ success: false, message: 'Token inválido' });
     }
 
-    console.log('✅ Token interno decodificado:', decoded);
+    console.log('Token interno decodificado:', decoded);
 
     try {
       const user = await getUserByEmail(decoded.email);
 
       if (!user) {
-        console.warn('⚠️ Usuario no encontrado en la base de datos local:', decoded.email);
+        console.warn('Usuario no encontrado en la base de datos local:', decoded.email);
         return res.status(403).json({ success: false, message: 'Usuario no registrado en base de datos' });
       }
 

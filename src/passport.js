@@ -19,37 +19,34 @@ passport.use(
       callbackURL: process.env.SAP_CALLBACK_URL,
       scope: "openid email profile",
       passReqToCallback: true,
-      response_type: "code id_token", // Opcional, pero ya lo dejamos
+      response_type: "code id_token", 
     },
     async (req, issuer, userId, profile, accessToken, refreshToken, params, done) => {
       try {
-        console.log("✅ Access Token recibido desde SAP:", accessToken);
+        console.log("Access Token recibido desde SAP:", accessToken);
 
-        // ✅ Guardamos el accessToken en la sesión para usarlo después en el redirect
         req.session.accessToken = accessToken;
-        console.log("✅ Access Token guardado en sesión:", req.session.accessToken);
+        console.log("Access Token guardado en sesión:", req.session.accessToken);
 
-        // ✅ Decodificamos el accessToken directamente
         const decodedToken = jwt.decode(accessToken);
-        console.log("🧩 Access Token decodificado completo:", decodedToken);
+        console.log("Access Token decodificado completo:", decodedToken);
 
         const email = decodedToken?.mail;
 
         if (!email) {
-          console.error("❌ No se encontró el campo 'mail' en el access_token decodificado:", decodedToken);
+          console.error("No se encontró el campo 'mail' en el access_token decodificado:", decodedToken);
           return done(new Error("No se pudo obtener el email del usuario SAP"), null);
         }
 
-        console.log("✅ Email extraído del access_token:", email);
+        console.log("Email extraído del access_token:", email);
 
-        // ✅ Verificamos en la base de datos local
         const conn = await poolPromise;
         const stmt = await conn.prepare("SELECT * FROM Usuario WHERE email = ?");
         const result = await stmt.exec([email]);
 
         if (result && result.length > 0) {
           const userLocal = result[0];
-          console.log("✅ Usuario encontrado en la base local:", userLocal);
+          console.log("suario encontrado en la base local:", userLocal);
 
           profile.localUser = {
             id: userLocal.ID,
@@ -59,7 +56,7 @@ passport.use(
             registrado: true,
           };
         } else {
-          console.warn("⚠️ El usuario SAP no está registrado en la base local:", email);
+          console.warn("El usuario SAP no está registrado en la base local:", email);
           profile.localUser = {
             email,
             registrado: false,
@@ -68,27 +65,25 @@ passport.use(
 
         return done(null, profile);
       } catch (error) {
-        console.error("❌ Error durante la verificación del usuario SAP:", error);
+        console.error("Error durante la verificación del usuario SAP:", error);
         return done(error);
       }
     }
   )
 );
 
-// ✅ Serializamos la info del usuario en la sesión
 passport.serializeUser((user, done) => {
   const sessionUser = {
     email: user.localUser?.email || user.emails?.[0]?.value,
     id: user.localUser?.id || user.id,
     rol: user.localUser?.rol || "Invitado",
   };
-  console.log("✅ Usuario serializado en la sesión:", sessionUser);
+  console.log("Usuario serializado en la sesión:", sessionUser);
   done(null, sessionUser);
 });
 
-// ✅ Deserializamos la sesión
 passport.deserializeUser((obj, done) => {
-  console.log("♻️ Usuario deserializado de la sesión:", obj);
+  console.log("Usuario deserializado de la sesión:", obj);
   done(null, obj);
 });
 

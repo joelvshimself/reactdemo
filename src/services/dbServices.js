@@ -1,6 +1,6 @@
-import { poolPromise } from '../config/dbConfig.js'; // 👈 Ajusta la ruta según tu proyecto
+import { poolPromise } from '../config/dbConfig.js'; 
 
-// Función para obtener un usuario por email
+// Funcion para obtener un usuario por email
 export async function getUserByEmail(email) {
   try {
     const conn = await poolPromise;
@@ -14,9 +14,9 @@ export async function getUserByEmail(email) {
       return null;
     }
 
-    return result[0]; // ✅ Devolvemos el primer usuario encontrado
+    return result[0]; // Devolvemos el primer usuario encontrado
   } catch (error) {
     console.error('Error consultando usuario en SAP HANA:', error);
-    throw error; // Propagamos el error para manejarlo en el controlador
+    throw error; 
   }
 }
