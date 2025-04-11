@@ -7,6 +7,7 @@ import { Dialog, Select, Option } from "@ui5/webcomponents-react";
 import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
 import "@ui5/webcomponents-icons/dist/employee.js";
+import "@ui5/webcomponents-icons/dist/shipping-status.js";
 import "@ui5/webcomponents-icons/dist/navigation-right-arrow.js";
 import "@ui5/webcomponents-icons/dist/delete.js";
 import "@ui5/webcomponents-icons/dist/add.js";
@@ -230,6 +231,7 @@ export default function Usuarios() {
                         <SideNavigationItem icon="navigation-right-arrow" text="Pollo" />
                         <SideNavigationItem icon="navigation-right-arrow" text="Pavo" />
                         <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
+                        <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
                     </SideNavigation>
                 </div>
             )}

@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan'; 
 import userRoutes from './src/routes/userRoutes.js';
+import ordenesRoutes from './src/routes/ordenesRoutes.js';
 import setupSwagger from './src/config/swaggerConfig.js';
 
 const app = express();
@@ -17,6 +18,9 @@ setupSwagger(app);
 
 // Rutas usuario
 app.use('/api', userRoutes);
+
+// Rutas ordenes
+app.use('/api/ordenes', ordenesRoutes);
 
 // Port y terminal Host
 const PORT = process.env.PORT || 3000;
