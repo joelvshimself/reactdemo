@@ -15,6 +15,8 @@ import { Grid } from "@mui/material";
 import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
 import "@ui5/webcomponents-icons/dist/navigation-right-arrow.js";
+import "@ui5/webcomponents-icons/dist/shipping-status.js";
+
 
 const drawerWidth = 240;
 
@@ -100,17 +102,6 @@ export default function Home() {
           }}
         >
           <SideNavigation onSelectionChange={handleNavigationClick}>
-
-  <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
-  <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
-  <SideNavigationItem icon="navigation-right-arrow" text="Carne de res" />
-  <SideNavigationItem icon="navigation-right-arrow" text="Carne de cerdo" />
-  <SideNavigationItem icon="navigation-right-arrow" text="Pollo" />
-  <SideNavigationItem icon="navigation-right-arrow" text="Pavo" />
-  <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
-  <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
-  </SideNavigation>
-
             <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
             <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
             <SideNavigationItem icon="navigation-right-arrow" text="Carne de res" />
@@ -118,6 +109,8 @@ export default function Home() {
             <SideNavigationItem icon="navigation-right-arrow" text="Pollo" />
             <SideNavigationItem icon="navigation-right-arrow" text="Pavo" />
             <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
+            <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
+            
           </SideNavigation>
         </div>
       )}

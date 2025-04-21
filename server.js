@@ -46,9 +46,6 @@ app.use('/api', userRoutes);
 // Rutas ordenes
 app.use('/api/ordenes', ordenesRoutes);
 
-// Port y terminal Host
-const PORT = process.env.PORT || 3000;
-=======
 
 app.post('/auth/verify', verifyToken);
 
