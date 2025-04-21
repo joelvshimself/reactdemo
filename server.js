@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import userRoutes from './src/routes/userRoutes.js';
+import ordenesRoutes from './src/routes/ordenesRoutes.js';
 import setupSwagger from './src/config/swaggerConfig.js';
 import session from "express-session";
 import passport from "./src/passport.js";
@@ -42,6 +43,12 @@ setupSwagger(app);
 // Rutas API
 app.use('/api', userRoutes);
 
+// Rutas ordenes
+app.use('/api/ordenes', ordenesRoutes);
+
+// Port y terminal Host
+const PORT = process.env.PORT || 3000;
+=======
 
 app.post('/auth/verify', verifyToken);
 

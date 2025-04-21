@@ -100,6 +100,17 @@ export default function Home() {
           }}
         >
           <SideNavigation onSelectionChange={handleNavigationClick}>
+
+  <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
+  <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
+  <SideNavigationItem icon="navigation-right-arrow" text="Carne de res" />
+  <SideNavigationItem icon="navigation-right-arrow" text="Carne de cerdo" />
+  <SideNavigationItem icon="navigation-right-arrow" text="Pollo" />
+  <SideNavigationItem icon="navigation-right-arrow" text="Pavo" />
+  <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
+  <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
+  </SideNavigation>
+
             <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
             <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
             <SideNavigationItem icon="navigation-right-arrow" text="Carne de res" />
