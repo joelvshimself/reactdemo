@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Input,
   Button,
   Link,
   Title,
@@ -11,27 +9,12 @@ import {
 } from "@ui5/webcomponents-react";
 import GoogleIcon from "@mui/icons-material/Google";
 import { Button as MuiButton } from "@mui/material";
-import { login } from "../services/authService"; // Asegúrate que esta ruta sea correcta
 
 export default function Login() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const result = await login(form.email, form.password);
-    if (result.success) {
-      setError(false);
-      navigate("/home");
-    } else {
-      setError(true);
-    }
+  const handleSapLogin = () => {
+    window.location.href = "http://localhost:3000/auth/sap";
   };
 
   return (
@@ -61,7 +44,6 @@ export default function Login() {
             borderRadius: "16px",
             maxWidth: "400px",
             width: "100%",
-            flexDirection: "column",
           }}
         >
           <img
@@ -70,75 +52,47 @@ export default function Login() {
             style={{ width: "150px", margin: "0 auto 20px auto" }}
           />
 
-          <Title level="H4">Iniciar Sesion</Title>
+          <Title level="H4" style={{ textAlign: "center", marginBottom: "1rem" }}>
+            Iniciar Sesión
+          </Title>
 
-          <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-            <Input
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onInput={(e) =>
-                handleChange({ target: { name: "email", value: e.target.value } })
-              }
-              style={{ marginBottom: "1rem", width: "100%" }}
-            />
-            <Input
-              name="password"
-              type="Password"
-              placeholder="Contraseña"
-              value={form.password}
-              onInput={(e) =>
-                handleChange({ target: { name: "password", value: e.target.value } })
-              }
-              style={{ marginBottom: "0.5rem", width: "100%" }}
-            />
-            {error && (
-              <Text style={{ color: "red", fontSize: "12px" }}>
-                Correo o contraseña incorrectos
-              </Text>
-            )}
+          <Button
+            onClick={handleSapLogin}
+            style={{
+              width: "100%",
+              backgroundColor: "#E53935",
+              color: "white",
+              marginBottom: "16px",
+            }}
+          >
+            Iniciar Sesión
+          </Button>
 
-            <FlexBox justifyContent="End" style={{ marginBottom: "1rem" }}>
-              <Link href="#">¿Olvidaste tu contraseña?</Link>
-            </FlexBox>
+          <Text style={{ textAlign: "center", marginBottom: "12px" }}>
+            o continuar con
+          </Text>
 
-            <Button
-              type="Submit"
-              style={{
-                width: "100%",
-                backgroundColor: "#E53935",
-                color: "white",
-                marginBottom: "16px",
-              }}
-            >
-              Sign In
-            </Button>
-
-            <Text style={{ textAlign: "center", marginBottom: "12px" }}>
-              o continuar con
-            </Text>
-            <MuiButton
-              fullWidth
-              startIcon={<GoogleIcon />}
-              variant="outlined"
-              sx={{
-                textTransform: "none",
-                fontSize: "16px",
-                borderColor: "#E53935",
-                color: "#E53935",
-                "&:hover": {
-                  backgroundColor: "#fbe9e7",
-                  borderColor: "#C62828",
-                },
-                marginBottom: "12px"
-              }}
-            >
-              Google
-            </MuiButton>
-          </form>
+          <MuiButton
+            fullWidth
+            startIcon={<GoogleIcon />}
+            variant="outlined"
+            sx={{
+              textTransform: "none",
+              fontSize: "16px",
+              borderColor: "#E53935",
+              color: "#E53935",
+              "&:hover": {
+                backgroundColor: "#fbe9e7",
+                borderColor: "#C62828",
+              },
+              marginBottom: "12px"
+            }}
+          >
+            Google
+          </MuiButton>
 
           <Text style={{ fontSize: "12px", textAlign: "center", marginTop: "1rem" }}>
-            <Link href="#">Terminos & Condiciones</Link> |{" "}
+            <Link href="#">Términos & Condiciones</Link> |{" "}
             <Link href="#">Soporte</Link> |{" "}
             <Link href="#">Legal & Opciones</Link>
           </Text>

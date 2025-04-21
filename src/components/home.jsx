@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { verifySapToken, logout } from "../services/authService";
 import {
   ShellBar,
   SideNavigation,
@@ -9,7 +10,7 @@ import {
   Text,
   FlexBox
 } from "@ui5/webcomponents-react";
-import { Grid } from "@mui/material"; 
+import { Grid } from "@mui/material";
 
 import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
@@ -20,18 +21,62 @@ const drawerWidth = 240;
 export default function Home() {
   const navigate = useNavigate();
   const [isSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get("internal_token"); 
+
+      if (tokenFromUrl) {
+        console.log("✅ Token interno encontrado en URL:", tokenFromUrl);
+        localStorage.setItem("token", tokenFromUrl);
+        // Limpiamos la URL después de guardar el token
+        window.history.replaceState({}, document.title, "/home");
+        return setTimeout(checkUser, 0); 
+      }
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        alert("No se recibió token interno");
+        navigate("/login");
+        return;
+      }
+
+      console.log("🚀 Verificando token interno:", token);
+
+      const result = await verifySapToken(token);
+
+      if (result.success) {
+        setUser(result.user);
+        setLoading(false);
+      } else {
+        alert(result.message || "Acceso denegado");
+        logout();
+        navigate("/login");
+      }
+    };
+
+    checkUser();
+  }, [navigate]);
 
   const handleNavigationClick = (event) => {
     const selected = event.detail.item.dataset.route;
     if (selected) navigate(selected);
   };
 
+  if (loading) {
+    return <p>Cargando autenticación...</p>;
+  }
+
   return (
     <FlexBox direction="Row" style={{ height: "100vh", width: "100vw" }}>
       {/* ShellBar superior */}
       <ShellBar
         logo={<img src="/viba1.png" alt="Carnes ViBa" style={{ height: "40px" }} />}
-        primaryTitle="Productos"
+        primaryTitle={`Productos - Bienvenido, ${user.nombre}`}
         onProfileClick={() => navigate("/login")}
         profile={{ image: "/viba1.png" }}
         style={{
@@ -55,6 +100,7 @@ export default function Home() {
           }}
         >
           <SideNavigation onSelectionChange={handleNavigationClick}>
+
   <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
   <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
   <SideNavigationItem icon="navigation-right-arrow" text="Carne de res" />
@@ -65,6 +111,14 @@ export default function Home() {
   <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
   </SideNavigation>
 
+            <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
+            <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
+            <SideNavigationItem icon="navigation-right-arrow" text="Carne de res" />
+            <SideNavigationItem icon="navigation-right-arrow" text="Carne de cerdo" />
+            <SideNavigationItem icon="navigation-right-arrow" text="Pollo" />
+            <SideNavigationItem icon="navigation-right-arrow" text="Pavo" />
+            <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
+          </SideNavigation>
         </div>
       )}
 
@@ -100,11 +154,11 @@ export default function Home() {
           ))}
         </Grid>
 
-        {/* Placeholders de graficos */}
+        {/* Placeholders de gráficos */}
         <Grid container spacing={2} style={{ marginTop: "1rem" }}>
           <Grid item xs={12} md={6}>
             <Card style={{ height: 300, padding: "1rem" }}>
-              <Title level="H6">Prediccion de demanda (Placeholder)</Title>
+              <Title level="H6">Predicción de demanda (Placeholder)</Title>
               <FlexBox
                 direction="Column"
                 style={{
