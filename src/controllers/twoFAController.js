@@ -46,4 +46,20 @@ export const verify2FA = async (req, res) => {
       res.status(401).json({ success: false, message: "Código incorrecto" });
     }
   };
+  export const check2FAStatus = async (req, res) => {
+    const { email } = req.body;
+    const conn = await poolPromise;
+  
+    const stmt = await conn.prepare(`
+      SELECT "TWOFASECRET" FROM USUARIO WHERE "EMAIL" = ?
+    `);
+    const result = await stmt.exec([email]);
+  
+    if (!result || result.length === 0) {
+      return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+    }
+  
+    const isActive = !!result[0].TWOFASECRET;
+    res.json({ twoFAEnabled: isActive });
+  };
   
