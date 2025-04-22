@@ -14,8 +14,7 @@ export const loginUser = async (req, res) => {
 
     const conn = await poolPromise;
 
-    // Preparar y ejecutar consulta
-    const stmt = await conn.prepare('SELECT * FROM Usuario WHERE email = ?');
+    const stmt = await conn.prepare('SELECT * FROM USUARIO WHERE "EMAIL" = ?');
     const result = await stmt.exec([email]);
 
     if (!result || result.length === 0) {
@@ -24,14 +23,13 @@ export const loginUser = async (req, res) => {
 
     const user = result[0];
 
-    // Comparar contraseña con bcrypt
+    // Comparar contraseña
     const isMatch = await bcrypt.compare(password, user.PASSWORD);
     if (!isMatch) {
       return res.status(401).json({ message: "Credenciales incorrectas" });
     }
 
-    // ✅ ✅ ✅ AQUÍ GUARDAMOS EL CORREO EN SESIÓN
-    req.session.userEmail = user.EMAIL;
+    const has2FA = !!user.TWOFASECRET;
 
     // Generar token
     const token = jwt.sign(
@@ -40,6 +38,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    // Enviar respuesta
     res.json({
       message: "Login exitoso",
       token,
@@ -47,9 +46,11 @@ export const loginUser = async (req, res) => {
         id: user.ID,
         nombre: user.NOMBRE,
         email: user.EMAIL,
-        rol: user.ROL
+        rol: user.ROL,
+        twoFAEnabled: has2FA // 👈 Este campo lo usas en el frontend
       }
     });
+
   } catch (error) {
     console.error("Error en login:", error);
     res.status(500).json({ message: "Error en el servidor al procesar login" });

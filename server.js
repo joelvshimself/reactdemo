@@ -5,12 +5,7 @@ import morgan from 'morgan';
 import userRoutes from './src/routes/userRoutes.js';
 import ordenesRoutes from './src/routes/ordenesRoutes.js';
 import setupSwagger from './src/config/swaggerConfig.js';
-import session from "express-session";
-import passport from "./src/passport.js";
-import dotenv from "dotenv";
-import jwt from "jsonwebtoken";
-import { verifyToken } from './src/controllers/authController.js'; 
-dotenv.config();
+import twoFARoutes from './src/routes/twoFARoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +16,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use('/api/auth', twoFARoutes);
 app.use(morgan('dev'));
 
 app.use(session({

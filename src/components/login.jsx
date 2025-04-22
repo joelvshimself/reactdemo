@@ -13,9 +13,23 @@ import { Button as MuiButton } from "@mui/material";
 export default function Login() {
   const navigate = useNavigate();
 
-  const handleSapLogin = () => {
-    window.location.href = "http://localhost:3000/auth/sap";
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    const result = await login(form.email, form.password);
+    if (result.success) {
+      setError(false);
+      // Redirigir a pantalla de 2FA con el email
+      navigate("/2fa", { state: { email: form.email } });
+    } else {
+      setError(true);
+    }
+  };
+  
 
   return (
     <FlexBox
