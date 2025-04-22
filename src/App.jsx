@@ -4,6 +4,10 @@ import Home from "./components/home";
 import Producto from "./components/producto";
 import Usuarios from "./components/usuarios";
 import Ordenes from "./components/orden";
+import Venta from "./components/venta"; 
+import TwoFAScreen from './components/TwoFAScreen';
+
+
 
 function App() {
   return (
@@ -15,6 +19,8 @@ function App() {
         <Route path="/producto" element={<Producto />} />
         <Route path="/usuarios" element={<Usuarios />} />
         <Route path="/orden" element={<Ordenes />} />
+        <Route path="/venta" element={<Venta />} /> {/* <-- Agregas la ruta */}
+        <Route path="/2fa" element={<TwoFAScreen />} />
       </Routes>
     </Router>
   );

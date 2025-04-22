@@ -24,15 +24,17 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const result = await login(form.email, form.password);
     if (result.success) {
       setError(false);
-      navigate("/home");
+      // Redirigir a pantalla de 2FA con el email
+      navigate("/2fa", { state: { email: form.email } });
     } else {
       setError(true);
     }
   };
+  
 
   return (
     <FlexBox
