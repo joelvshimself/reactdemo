@@ -1,61 +1,57 @@
-const API_URL = "http://localhost:3000"; // Ajusta si cambias de puerto o de ambiente
+const API_URL = "http://localhost:3000/api";
 
-// ✅ Guardar tokens en localStorage
-const setToken = (token) => localStorage.setItem("token", token); // SAP IAS token (opcional si quieres conservar)
-const setInternalToken = (token) => localStorage.setItem("internalToken", token); // ✅ Nuestro token interno
-
-// ✅ Obtener tokens
+// Guardar token 
+const setToken = (token) => localStorage.setItem("token", token);
 const getToken = () => localStorage.getItem("token");
-const getInternalToken = () => localStorage.getItem("internalToken");
+const removeToken = () => localStorage.removeItem("token");
 
-// ✅ Eliminar tokens
-const removeToken = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("internalToken"); 
-};
+// Verificar si el usuario esta autenticado
+const isAuthenticated = () => !!getToken();
 
-//Verificar si el usuario está autenticado
-const isAuthenticated = () => !!getInternalToken(); 
-
-//Verificar token de SAP IAS y obtener token interno del backend
-const verifySapToken = async (sapToken) => {
+// Login
+const login = async (email, password) => {
   try {
-    const response = await fetch(`${API_URL}/auth/verify`, {
+    const response = await fetch(`${API_URL}/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${sapToken}`, 
-      },
-      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await response.json();
-
-    if (response.ok && data.success) {
-      setToken(sapToken); 
-      setInternalToken(data.internalToken); 
-      return { success: true, user: data.user };
+    if (response.ok) {
+      setToken(data.token);
+      return { success: true };
     } else {
       return { success: false, message: data.message };
     }
   } catch (error) {
-    console.error("Error al verificar token:", error);
     return { success: false, message: "Error en la conexión con el servidor" };
   }
 };
 
-//Logout 
+// Registro
+const register = async (name, email, password) => {
+  try {
+    const response = await fetch(`${API_URL}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      return { success: true };
+    } else {
+      return { success: false, message: data.message };
+    }
+  } catch (error) {
+    return { success: false, message: "Error en la conexión con el servidor" };
+  }
+};
+
+// Logout
 const logout = () => {
   removeToken();
 };
 
-
-export {
-  verifySapToken,
-  logout,
-  isAuthenticated,
-  getToken,
-  getInternalToken,
-  setToken,
-  setInternalToken
-};
+export { login, register, logout, isAuthenticated };
