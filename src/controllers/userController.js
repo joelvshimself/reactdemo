@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { poolPromise } from '../config/dbConfig.js';
-import { createSapUser } from '../services/sapProvisioningService.js';
 
 // Login
 export const loginUser = async (req, res) => {
@@ -29,6 +28,7 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Credenciales incorrectas" });
     }
 
+    // Verificar si tiene activado 2FA
     const has2FA = !!user.TWOFASECRET;
 
     // Generar token
@@ -97,33 +97,19 @@ export const getUserById = async (req, res) => {
 export const createUser = async (req, res) => {
   try {
     const { nombre, email, password, rol } = req.body;
+    if (!password) return res.status(400).json({ message: "La contraseña es obligatoria" });
 
-    if (!password) {
-      return res.status(400).json({ message: "La contraseña es obligatoria" });
-    }
-
-    // Hash de la contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const pool = await poolPromise;
-
-    // Insertar en tu base de datos local
     await pool.exec(
       'INSERT INTO Usuario (nombre, email, password, rol) VALUES (?, ?, ?, ?)',
       [nombre, email, hashedPassword, rol]
     );
 
-    try {
-      await createSapUser(email, nombre, ''); // Si tienes apellido, lo pasas como tercer argumento
-      console.log(`✅ Usuario SAP creado para: ${email}`);
-    } catch (sapError) {
-      console.error(`❌ Error creando usuario en SAP:`, sapError.response?.data || sapError.message);
-    }
-
-    res.status(201).json({ message: "Usuario creado exitosamente en local y SAP" });
+    res.status(201).json({ message: "Usuario creado exitosamente" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
