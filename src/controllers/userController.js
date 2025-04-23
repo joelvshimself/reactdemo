@@ -126,7 +126,7 @@ export const updateUser = async (req, res) => {
     const conn = await poolPromise;
 
     // Verificar si el usuario existe
-    const checkStmt = await conn.prepare('SELECT * FROM Usuario WHERE id = ?');
+    const checkStmt = await conn.prepare('SELECT * FROM Usuario WHERE "ID_USUARIO" = ?');
     const result = await checkStmt.exec([id]);
 
     if (!result || result.length === 0) {
@@ -149,8 +149,9 @@ export const updateUser = async (req, res) => {
         email = ?, 
         password = ?, 
         rol = ? 
-      WHERE id = ?
+      WHERE "ID_USUARIO" = ?
     `);
+    
 
     await updateStmt.exec([nombre, email, hashedPassword, rol, id]);
 
@@ -170,7 +171,7 @@ export const deleteUser = async (req, res) => {
     const conn = await poolPromise;
 
     // Verificar si el usuario existe
-    const checkStmt = await conn.prepare('SELECT * FROM Usuario WHERE id = ?');
+    const checkStmt = await conn.prepare('SELECT * FROM Usuario WHERE "ID_USUARIO" = ?');
     const result = await checkStmt.exec([id]);
 
     if (!result || result.length === 0) {
@@ -178,7 +179,7 @@ export const deleteUser = async (req, res) => {
     }
 
     // Eliminar usuario
-    const deleteStmt = await conn.prepare('DELETE FROM Usuario WHERE id = ?');
+    const deleteStmt = await conn.prepare('DELETE FROM Usuario WHERE "ID_USUARIO" = ?');
     await deleteStmt.exec([id]);
 
     res.json({ message: "Usuario eliminado correctamente" });

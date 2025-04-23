@@ -46,18 +46,19 @@ export default function Usuarios() {
 
   //Placeholders
   const loadUsuarios = async () => {
-    const data = await getUsuarios();
-    const usuariosMapeados = data.map((u, index) => ({
-      id: u.ID ?? `usuario-${index}`, // Si u.ID es null/undefined, usa "usuario-0", "usuario-1", etc.
+    const data = await getUsuarios(); // Llamada al backend
+    console.log("👉 Data cruda desde API:", data); // <--- AQUI
+  
+    const usuariosMapeados = data.map((u) => ({
+      id: u.ID_USUARIO, // ✅ aquí está tu ID correcto
       nombre: u.NOMBRE,
       correo: u.EMAIL,
       rol: u.ROL
-    }));
-    
-    console.log("🔍 IDs únicos generados:", usuariosMapeados.map(u => u.id));
-    
-    setUsuarios(usuariosMapeados);    
+    }));    
+  
+    setUsuarios(usuariosMapeados);
   };
+  
 
   useEffect(() => {
     loadUsuarios();
@@ -422,8 +423,8 @@ export default function Usuarios() {
                     }
                     return 0;
                   })
-                  .map((usuario) => (
-                    <tr key={usuario.id} style={{ borderBottom: "1px solid #eee" }}>
+                  .map((usuario, index) => (
+                    <tr key={usuario.id ?? `temp-${index}`} style={{ borderBottom: "1px solid #eee" }}>                  
                       <td style={{ padding: "12px" }}>
                         <input
                           type="checkbox"
