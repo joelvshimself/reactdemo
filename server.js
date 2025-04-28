@@ -6,6 +6,7 @@ import userRoutes from './src/routes/userRoutes.js';
 import ordenesRoutes from './src/routes/ordenesRoutes.js';
 import setupSwagger from './src/config/swaggerConfig.js';
 import twoFARoutes from './src/routes/twoFARoutes.js';
+import crudr from './src/routes/crudr.js';
 
 
 const app = express();
@@ -21,6 +22,8 @@ setupSwagger(app);
 
 // Rutas usuario
 app.use('/api', userRoutes);
+// Rutas CRUD
+app.use('/api', crudr);
 
 // Rutas ordenes
 app.use('/api/ordenes', ordenesRoutes);
