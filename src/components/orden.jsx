@@ -17,6 +17,7 @@ import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
 import "@ui5/webcomponents-icons/dist/employee.js";
 import "@ui5/webcomponents-icons/dist/shipping-status.js";
+import "@ui5/webcomponents-icons/dist/cart.js";
 import "@ui5/webcomponents-icons/dist/navigation-right-arrow.js";
 import "@ui5/webcomponents-icons/dist/delete.js";
 import "@ui5/webcomponents-icons/dist/add.js";
@@ -134,6 +135,7 @@ export default function Ordenes() {
             <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
             <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
             <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
+            <SideNavigationItem icon="cart" text="Ventas" data-route="/venta" />
           </SideNavigation>
         </div>
       )}

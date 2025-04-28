@@ -1,11 +1,21 @@
 // venta.jsx
 import { useState } from "react";
-import { FlexBox, ShellBar, SideNavigation, SideNavigationItem, Card, Title, Input, Button, Dialog } from "@ui5/webcomponents-react";
+import {
+  FlexBox,
+  ShellBar,
+  SideNavigation,
+  SideNavigationItem,
+  Card,
+  Title,
+  Input,
+  Button,
+  Dialog
+} from "@ui5/webcomponents-react";
 import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
 import "@ui5/webcomponents-icons/dist/employee.js";
 import "@ui5/webcomponents-icons/dist/shipping-status.js";
-import "@ui5/webcomponents-icons/dist/cart.js"; // ícono válido para ventas
+import "@ui5/webcomponents-icons/dist/cart.js";
 import "@ui5/webcomponents-icons/dist/add.js";
 import "@ui5/webcomponents-icons/dist/edit.js";
 import "@ui5/webcomponents-icons/dist/delete.js";
@@ -18,19 +28,25 @@ export default function Venta() {
   const [openCrear, setOpenCrear] = useState(false);
   const [openEditar, setOpenEditar] = useState(false);
   const [ventaEditar, setVentaEditar] = useState(null);
-  const [nuevaVenta, setNuevaVenta] = useState({ cliente: "", fecha: "", cantidad: "", total: "" });
+  const [detalleVenta, setDetalleVenta] = useState(null);
+  const [nuevaVenta, setNuevaVenta] = useState({ cliente: "", fecha: "", productos: [] });
+  const [nuevoProducto, setNuevoProducto] = useState({ nombre: "", cantidad: "", costo_unitario: "" });
   const [busqueda, setBusqueda] = useState("");
 
-  const agregarVenta = () => {
-    const nueva = { ...nuevaVenta, id: Date.now() };
-    setVentas([...ventas, nueva]);
-    setNuevaVenta({ cliente: "", fecha: "", cantidad: "", total: "" });
+  const agregarProducto = () => {
+    setNuevaVenta({
+      ...nuevaVenta,
+      productos: [...nuevaVenta.productos, nuevoProducto]
+    });
+    setNuevoProducto({ nombre: "", cantidad: "", costo_unitario: "" });
   };
 
-  const editarVenta = () => {
-    const actualizadas = ventas.map(v => v.id === ventaEditar.id ? ventaEditar : v);
-    setVentas(actualizadas);
-    setOpenEditar(false);
+  const agregarVenta = () => {
+    const total = nuevaVenta.productos.reduce((acc, p) => acc + (parseFloat(p.costo_unitario) * parseFloat(p.cantidad)), 0);
+    const cantidad = nuevaVenta.productos.reduce((acc, p) => acc + parseInt(p.cantidad), 0);
+    const nueva = { ...nuevaVenta, id: Date.now(), total, cantidad };
+    setVentas([...ventas, nueva]);
+    setNuevaVenta({ cliente: "", fecha: "", productos: [] });
   };
 
   const eliminarVentas = () => {
@@ -66,12 +82,7 @@ export default function Venta() {
         <Title level="H4">Ventas</Title>
 
         <FlexBox direction="Row" justifyContent="SpaceBetween" style={{ marginBottom: "1rem" }}>
-          <Input
-            placeholder="Buscar por Cliente"
-            style={{ width: "300px" }}
-            value={busqueda}
-            onInput={(e) => setBusqueda(e.target.value)}
-          />
+          <Input placeholder="Buscar por Cliente" style={{ width: "300px" }} value={busqueda} onInput={(e) => setBusqueda(e.target.value)} />
           <FlexBox direction="Row" style={{ gap: "0.5rem" }}>
             <Button design="Negative" icon="delete" disabled={!ventasSeleccionadas.length} onClick={eliminarVentas}>Eliminar</Button>
             <Button design="Emphasized" icon="add" onClick={() => setOpenCrear(true)}>Crear</Button>
@@ -87,43 +98,29 @@ export default function Venta() {
 
         <Card style={{ padding: "1rem", marginTop: "1rem" }}>
           <Title level="H5" style={{ marginBottom: "1rem", padding: "12px" }}>Base de Datos de Ventas</Title>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "monospace" }}>
-            <thead style={{ backgroundColor: "#f5f5f5" }}>
-              <tr>
-                <th></th>
-                <th style={{ textAlign: "center" }}>Cliente</th>
-                <th style={{ textAlign: "center" }}>Fecha</th>
-                <th style={{ textAlign: "center" }}>Cantidad</th>
-                <th style={{ textAlign: "center" }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ventas
-                .filter(v => v.cliente.toLowerCase().includes(busqueda.toLowerCase()))
-                .map((venta) => (
-                  <tr key={venta.id} style={{ textAlign: "center", borderBottom: "1px solid #eee" }}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={ventasSeleccionadas.includes(venta.id)}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          if (checked) setVentasSeleccionadas([...ventasSeleccionadas, venta.id]);
-                          else setVentasSeleccionadas(ventasSeleccionadas.filter(id => id !== venta.id));
-                        }}
-                      />
-                    </td>
-                    <td>{venta.cliente}</td>
-                    <td>{venta.fecha}</td>
-                    <td>{venta.cantidad}</td>
-                    <td><b>${venta.total}</b></td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {ventas.filter(v => v.cliente.toLowerCase().includes(busqueda.toLowerCase())).map((venta, i) => (
+              <li key={venta.id} style={{ background: "#fff", marginBottom: "10px", padding: "1rem", borderRadius: "8px", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" }}>
+                <FlexBox justifyContent="SpaceBetween" alignItems="Center">
+                  <div>
+                    <input
+                      type="checkbox"
+                      checked={ventasSeleccionadas.includes(venta.id)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        if (checked) setVentasSeleccionadas([...ventasSeleccionadas, venta.id]);
+                        else setVentasSeleccionadas(ventasSeleccionadas.filter(id => id !== venta.id));
+                      }}
+                    />
+                    <span style={{ marginLeft: "1rem" }}><b>Venta {i + 1}</b></span>
+                  </div>
+                  <Button design="Transparent" onClick={() => setDetalleVenta(venta)}>Ver Detalles</Button>
+                </FlexBox>
+              </li>
+            ))}
+          </ul>
         </Card>
 
-        {/* Diálogo Crear */}
         <Dialog
           headerText="Nueva Venta"
           open={openCrear}
@@ -133,28 +130,34 @@ export default function Venta() {
           <FlexBox style={{ padding: "1rem", gap: "1rem" }} direction="Column">
             <Input placeholder="Cliente" value={nuevaVenta.cliente} onInput={(e) => setNuevaVenta({ ...nuevaVenta, cliente: e.target.value })} />
             <Input placeholder="Fecha" value={nuevaVenta.fecha} onInput={(e) => setNuevaVenta({ ...nuevaVenta, fecha: e.target.value })} />
-            <Input placeholder="Cantidad" value={nuevaVenta.cantidad} onInput={(e) => setNuevaVenta({ ...nuevaVenta, cantidad: e.target.value })} />
-            <Input placeholder="Total" value={nuevaVenta.total} onInput={(e) => setNuevaVenta({ ...nuevaVenta, total: e.target.value })} />
+            <Title level="H6">Productos</Title>
+            {nuevaVenta.productos.map((p, i) => (
+              <div key={i}>• {p.nombre} - {p.cantidad} x ${p.costo_unitario}</div>
+            ))}
+            <Input placeholder="Producto" value={nuevoProducto.nombre} onInput={(e) => setNuevoProducto({ ...nuevoProducto, nombre: e.target.value })} />
+            <Input placeholder="Cantidad" value={nuevoProducto.cantidad} onInput={(e) => setNuevoProducto({ ...nuevoProducto, cantidad: e.target.value })} />
+            <Input placeholder="Costo Unitario" value={nuevoProducto.costo_unitario} onInput={(e) => setNuevoProducto({ ...nuevoProducto, costo_unitario: e.target.value })} />
+            <Button onClick={agregarProducto} design="Transparent">Agregar producto</Button>
           </FlexBox>
         </Dialog>
 
-        {/* Diálogo Editar */}
-        <Dialog
-          headerText="Editar Venta"
-          open={openEditar}
-          onAfterClose={() => setOpenEditar(false)}
-          footer={<Button onClick={editarVenta} design="Emphasized">Guardar</Button>}
-        >
-          {ventaEditar && (
-            <FlexBox style={{ padding: "1rem", gap: "1rem" }} direction="Column">
-              <Input placeholder="Cliente" value={ventaEditar.cliente} onInput={(e) => setVentaEditar({ ...ventaEditar, cliente: e.target.value })} />
-              <Input placeholder="Fecha" value={ventaEditar.fecha} onInput={(e) => setVentaEditar({ ...ventaEditar, fecha: e.target.value })} />
-              <Input placeholder="Cantidad" value={ventaEditar.cantidad} onInput={(e) => setVentaEditar({ ...ventaEditar, cantidad: e.target.value })} />
-              <Input placeholder="Total" value={ventaEditar.total} onInput={(e) => setVentaEditar({ ...ventaEditar, total: e.target.value })} />
-            </FlexBox>
+        <Dialog headerText="Detalle de Venta" open={!!detalleVenta} onAfterClose={() => setDetalleVenta(null)} footer={<Button onClick={() => setDetalleVenta(null)}>Cerrar</Button>}>
+          {detalleVenta && (
+            <div style={{ padding: "1rem" }}>
+              <p><b>Cliente:</b> {detalleVenta.cliente}</p>
+              <p><b>Fecha:</b> {detalleVenta.fecha}</p>
+              <p><b>Productos:</b></p>
+              <ul>
+                {detalleVenta.productos.map((p, i) => (
+                  <li key={i}>{p.nombre} - {p.cantidad} x ${p.costo_unitario}</li>
+                ))}
+              </ul>
+              <p><b>Total:</b> ${detalleVenta.total}</p>
+            </div>
           )}
         </Dialog>
       </FlexBox>
     </FlexBox>
   );
 }
+//hola
