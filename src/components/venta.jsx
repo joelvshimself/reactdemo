@@ -20,6 +20,9 @@ import "@ui5/webcomponents-icons/dist/add.js";
 import "@ui5/webcomponents-icons/dist/edit.js";
 import "@ui5/webcomponents-icons/dist/delete.js";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { getVentas, venderProductos, eliminarVenta } from "../services/ventaService";
+import { editarVenta } from "../services/ventaService"; 
 
 export default function Venta() {
   const navigate = useNavigate();
@@ -33,6 +36,18 @@ export default function Venta() {
   const [nuevoProducto, setNuevoProducto] = useState({ nombre: "", cantidad: "", costo_unitario: "" });
   const [busqueda, setBusqueda] = useState("");
 
+  useEffect(() => {
+    const cargarVentas = async () => {
+      try {
+        const data = await getVentas();
+        setVentas(data);
+      } catch (error) {
+        alert("Error al cargar ventas");
+      }
+    };
+    cargarVentas();
+  }, []);
+
   const agregarProducto = () => {
     setNuevaVenta({
       ...nuevaVenta,
@@ -41,19 +56,87 @@ export default function Venta() {
     setNuevoProducto({ nombre: "", cantidad: "", costo_unitario: "" });
   };
 
-  const agregarVenta = () => {
-    const total = nuevaVenta.productos.reduce((acc, p) => acc + (parseFloat(p.costo_unitario) * parseFloat(p.cantidad)), 0);
-    const cantidad = nuevaVenta.productos.reduce((acc, p) => acc + parseInt(p.cantidad), 0);
-    const nueva = { id: Date.now(), productos: nuevaVenta.productos, total, cantidad };
-    setVentas([...ventas, nueva]);
-    setNuevaVenta({ cliente: "", fecha: "", productos: [] });
+  const agregarVenta = async () => {
+    try {
+      const productosParaEnviar = nuevaVenta.productos.map((p) => ({
+        producto: p.nombre,
+        cantidad: parseInt(p.cantidad)
+      }));
+
+      const response = await venderProductos(productosParaEnviar);
+
+      console.log("✅ Venta realizada:", response);
+      alert(`Venta realizada exitosamente. ID de venta: ${response.id_venta}`);
+
+      setVentas([...ventas, {
+        id: response.id_venta,
+        productos: nuevaVenta.productos,
+        total: response.total,
+        cantidad: productosParaEnviar.reduce((acc, p) => acc + p.cantidad, 0)
+      }]);
+
+      setNuevaVenta({ productos: [] });
+    } catch (error) {
+      alert("Error al realizar la venta. Inténtalo de nuevo.");
+    }
   };
 
-  const eliminarVentas = () => {
-    const filtradas = ventas.filter(v => !ventasSeleccionadas.includes(v.id));
-    setVentas(filtradas);
-    setVentasSeleccionadas([]);
+  const eliminarVentas = async () => {
+    try {
+      for (const id of ventasSeleccionadas) {
+        await eliminarVenta(id);
+      }
+
+      const nuevasVentas = ventas.filter(v => !ventasSeleccionadas.includes(v.id));
+      setVentas(nuevasVentas);
+      setVentasSeleccionadas([]);
+
+      alert("Ventas eliminadas correctamente");
+    } catch (error) {
+      alert("Error al eliminar ventas. Inténtalo de nuevo.");
+    }
   };
+  const guardarEdicion = async () => {
+    try {
+      const productosParaEnviar = ventaEditar.productos.map((p) => ({
+        nombre: p.nombre,
+        cantidad: parseInt(p.cantidad),
+        costo_unitario: parseFloat(p.costo_unitario)
+      }));
+  
+      const response = await editarVenta(ventaEditar.id, productosParaEnviar);
+  
+      const ventasActualizadas = ventas.map((v) => {
+        if (v.id === ventaEditar.id) {
+          return {
+            ...ventaEditar,
+            productos: productosParaEnviar,
+            total: response.total,
+            cantidad: productosParaEnviar.reduce((acc, p) => acc + p.cantidad, 0)
+          };
+        }
+        return v;
+      });
+  
+      setVentas(ventasActualizadas);
+      setOpenEditar(false);
+      setVentaEditar(null);
+      setVentasSeleccionadas([]);
+  
+      alert(`Venta ${ventaEditar.id} actualizada correctamente`);
+    } catch (error) {
+      alert("Error al actualizar la venta");
+    }
+  };
+  const actualizarProductoEdicion = (index, campo, valor) => {
+    const productosActualizados = [...ventaEditar.productos];
+    productosActualizados[index][campo] = valor;
+    setVentaEditar({
+      ...ventaEditar,
+      productos: productosActualizados
+    });
+  };
+
 
   const handleNavigationClick = (e) => {
     const route = e.detail.item.dataset.route;
@@ -64,7 +147,7 @@ export default function Venta() {
     <FlexBox direction="Row" style={{ height: "100vh", width: "100vw" }}>
       <ShellBar
         logo={<img src="/viba1.png" alt="ViBa" style={{ height: "40px" }} />}
-        primaryTitle="Ventas"
+        primaryTitle="Fs"
         profile={{ image: "/viba1.png" }}
         style={{ width: "100%", background: "#B71C1C", color: "white", position: "fixed", zIndex: 1201 }}
       />
@@ -99,7 +182,7 @@ export default function Venta() {
         <Card style={{ padding: "1rem", marginTop: "1rem" }}>
           <Title level="H5" style={{ marginBottom: "1rem", padding: "12px" }}>Base de Datos de Ventas</Title>
           <ul style={{ listStyle: "none", padding: 0 }}>
-          {ventas.map((venta, i) => (
+            {ventas.map((venta, i) => (
               <li key={venta.id} style={{ background: "#fff", marginBottom: "10px", padding: "1rem", borderRadius: "8px", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" }}>
                 <FlexBox justifyContent="SpaceBetween" alignItems="Center">
                   <div>
@@ -137,6 +220,40 @@ export default function Venta() {
             <Input placeholder="Costo Unitario" value={nuevoProducto.costo_unitario} onInput={(e) => setNuevoProducto({ ...nuevoProducto, costo_unitario: e.target.value })} />
             <Button onClick={agregarProducto} design="Transparent">Agregar producto</Button>
           </FlexBox>
+        </Dialog>
+        <Dialog
+          headerText="Editar Venta"
+          open={openEditar}
+          onAfterClose={() => {
+            setOpenEditar(false);
+            setVentaEditar(null);
+          }}
+          footer={<Button onClick={guardarEdicion} design="Emphasized">Guardar cambios</Button>}
+        >
+          {ventaEditar && (
+            <FlexBox style={{ padding: "1rem", gap: "1rem" }} direction="Column">
+              <Title level="H6">Editar Productos</Title>
+              {ventaEditar.productos.map((p, i) => (
+                <FlexBox key={i} direction="Row" style={{ gap: "0.5rem" }}>
+                  <Input
+                    value={p.nombre}
+                    placeholder="Producto"
+                    onInput={(e) => actualizarProductoEdicion(i, 'nombre', e.target.value)}
+                  />
+                  <Input
+                    value={p.cantidad}
+                    placeholder="Cantidad"
+                    onInput={(e) => actualizarProductoEdicion(i, 'cantidad', e.target.value)}
+                  />
+                  <Input
+                    value={p.costo_unitario}
+                    placeholder="Costo Unitario"
+                    onInput={(e) => actualizarProductoEdicion(i, 'costo_unitario', e.target.value)}
+                  />
+                </FlexBox>
+              ))}
+            </FlexBox>
+          )}
         </Dialog>
 
         <Dialog headerText="Detalle de Venta" open={!!detalleVenta} onAfterClose={() => setDetalleVenta(null)} footer={<Button onClick={() => setDetalleVenta(null)}>Cerrar</Button>}>

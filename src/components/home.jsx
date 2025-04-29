@@ -99,17 +99,13 @@ export default function Home() {
             boxShadow: "2px 0 5px rgba(0,0,0,0.05)",
           }}
         >
-          <SideNavigation onSelectionChange={handleNavigationClick}>
-            <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
-            <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
-            <SideNavigationItem icon="navigation-right-arrow" text="Carne de res" />
-            <SideNavigationItem icon="navigation-right-arrow" text="Carne de cerdo" />
-            <SideNavigationItem icon="navigation-right-arrow" text="Pollo" />
-            <SideNavigationItem icon="navigation-right-arrow" text="Pavo" />
-            <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
-            <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
-            <SideNavigationItem icon="cart" text="Ventas" data-route="/venta" />
-          </SideNavigation>
+        <SideNavigation onSelectionChange={handleNavigationClick}>
+          <SideNavigationItem icon="home" text="Dashboard" data-route="/home" />
+          <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
+          <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
+          <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
+          <SideNavigationItem icon="cart" text="Ventas" data-route="/venta" />
+        </SideNavigation>
         </div>
       )}
 

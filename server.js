@@ -1,4 +1,4 @@
-import 'dotenv/config'; // Imports
+import 'dotenv/config'; 
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan'; 
@@ -8,22 +8,22 @@ import setupSwagger from './src/config/swaggerConfig.js';
 import twoFARoutes from './src/routes/twoFARoutes.js';
 import crudr from './src/routes/crudr.js';
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', twoFARoutes);
 
 // Configurar Morgan 
-app.use(morgan('dev'));  
+app.use(morgan('dev'));
 
 // Configurar Swagger
 setupSwagger(app);
 
-// Rutas usuario
-app.use('/api', userRoutes);
-// Rutas CRUD
+// ** Primero CRUDR para asegurar que las rutas de venta existan **
 app.use('/api', crudr);
+
+// Luego las rutas de usuarios
+app.use('/api', userRoutes);
 
 // Rutas ordenes
 app.use('/api/ordenes', ordenesRoutes);

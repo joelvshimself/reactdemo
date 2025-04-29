@@ -454,6 +454,197 @@ crudr.post('/vender', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/ventas:
+ *   get:
+ *     summary: Obtener todas las ventas con sus detalles
+ *     tags: [temporal]
+ *     responses:
+ *       200:
+ *         description: Lista de ventas
+ */
+
+crudr.get("/ventas", async (req, res) => {
+  let connection;
+  try {
+    connection = await poolPromise;
+
+    const ventas = await connection.exec(`
+      SELECT V.id_venta, V.total, V.fecha, DV.id_inventario, DV.costo_unitario, I.producto
+      FROM Venta V
+      JOIN DetalleVenta DV ON V.id_venta = DV.id_venta
+      JOIN Inventario I ON DV.id_inventario = I.id_inventario
+      ORDER BY V.id_venta DESC
+    `);
+
+    const agrupadas = ventas.reduce((map, row) => {
+      const id = row.ID_VENTA;
+      if (!map[id]) {
+        map[id] = {
+          id: id,
+          total: row.TOTAL,
+          fecha: row.FECHA,
+          productos: [],
+        };
+      }
+      map[id].productos.push({
+        nombre: row.PRODUCTO,
+        costo_unitario: row.COSTO_UNITARIO
+      });
+      return map;
+    }, {});
+
+    res.status(200).json(Object.values(agrupadas));
+  } catch (error) {
+    console.error("❌ Error al obtener ventas:", error);
+    res.status(500).json({ error: "Error al obtener ventas", detail: error.message });
+  }
+});
+/**
+ * @swagger
+ * /api/ventas/{id}:
+ *   delete:
+ *     summary: Eliminar una venta específica
+ *     tags: [temporal]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Venta eliminada exitosamente
+ *       404:
+ *         description: Venta no encontrada
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+crudr.delete("/ventas/:id", async (req, res) => {
+  const ventaId = req.params.id;
+  let connection;
+
+  try {
+    connection = await poolPromise;
+
+    // Eliminar detalles primero (por restricción de FK)
+    await connection.exec(`
+      DELETE FROM DetalleVenta WHERE id_venta = ${ventaId}
+    `);
+
+    // Luego eliminar venta
+    const result = await connection.exec(`
+      DELETE FROM Venta WHERE id_venta = ${ventaId}
+    `);
+
+    res.status(200).json({ message: `Venta ${ventaId} eliminada exitosamente` });
+
+  } catch (error) {
+    console.error('❌ Error al eliminar venta:', error);
+    res.status(500).json({ error: 'Error al eliminar venta', detail: error.message });
+  }
+});
+/**
+ * @swagger
+ * /api/ventas/{id}:
+ *   put:
+ *     summary: Editar una venta (productos y costos)
+ *     tags: [temporal]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productos:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     nombre:
+ *                       type: string
+ *                     cantidad:
+ *                       type: integer
+ *                     costo_unitario:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Venta actualizada
+ *       400:
+ *         description: Datos inválidos
+ *       500:
+ *         description: Error del servidor
+ */
+
+crudr.put("/ventas/:id", async (req, res) => {
+  const ventaId = req.params.id;
+  const { productos } = req.body;
+
+  if (!Array.isArray(productos) || productos.length === 0) {
+    return res.status(400).json({ error: "Se requiere una lista de productos" });
+  }
+
+  let connection;
+
+  try {
+    connection = await poolPromise;
+
+    // 1. Eliminar productos existentes de esa venta
+    await connection.exec(`
+      DELETE FROM DetalleVenta WHERE id_venta = ${ventaId}
+    `);
+
+    // 2. Insertar nuevos productos con su costo
+    let total = 0;
+
+    for (const p of productos) {
+      const { nombre, cantidad, costo_unitario } = p;
+
+      const inventario = await connection.exec(`
+        SELECT id_inventario
+        FROM Inventario
+        WHERE producto = '${nombre}' AND estado = 'vendido'
+        AND TO_VARCHAR(observaciones) = 'Vendido en venta #${ventaId}'
+        ORDER BY fecha
+        LIMIT ${cantidad}
+      `);
+      
+
+      if (inventario.length < cantidad) {
+        return res.status(400).json({ error: `No hay suficientes unidades de ${nombre} vendidas en esta venta.` });
+      }
+
+      for (let i = 0; i < cantidad; i++) {
+        const inv = inventario[i];
+        await connection.exec(`
+          INSERT INTO DetalleVenta (id_venta, id_inventario, costo_unitario)
+          VALUES (${ventaId}, ${inv.ID_INVENTARIO}, ${costo_unitario})
+        `);
+        total += costo_unitario;
+      }
+    }
+
+    // 3. Actualizar total en tabla Venta
+    await connection.exec(`
+      UPDATE Venta SET total = ${total} WHERE id_venta = ${ventaId}
+    `);
+
+    res.status(200).json({ message: `Venta ${ventaId} actualizada`, total });
+
+  } catch (error) {
+    console.error("❌ Error al actualizar venta:", error);
+    res.status(500).json({ error: "Error al actualizar venta", detail: error.message });
+  }
+});
 
 
 
