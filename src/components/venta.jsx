@@ -29,7 +29,7 @@ export default function Venta() {
   const [openEditar, setOpenEditar] = useState(false);
   const [ventaEditar, setVentaEditar] = useState(null);
   const [detalleVenta, setDetalleVenta] = useState(null);
-  const [nuevaVenta, setNuevaVenta] = useState({ cliente: "", fecha: "", productos: [] });
+  const [nuevaVenta, setNuevaVenta] = useState({ productos: [] });
   const [nuevoProducto, setNuevoProducto] = useState({ nombre: "", cantidad: "", costo_unitario: "" });
   const [busqueda, setBusqueda] = useState("");
 
@@ -44,7 +44,7 @@ export default function Venta() {
   const agregarVenta = () => {
     const total = nuevaVenta.productos.reduce((acc, p) => acc + (parseFloat(p.costo_unitario) * parseFloat(p.cantidad)), 0);
     const cantidad = nuevaVenta.productos.reduce((acc, p) => acc + parseInt(p.cantidad), 0);
-    const nueva = { ...nuevaVenta, id: Date.now(), total, cantidad };
+    const nueva = { id: Date.now(), productos: nuevaVenta.productos, total, cantidad };
     setVentas([...ventas, nueva]);
     setNuevaVenta({ cliente: "", fecha: "", productos: [] });
   };
@@ -99,7 +99,7 @@ export default function Venta() {
         <Card style={{ padding: "1rem", marginTop: "1rem" }}>
           <Title level="H5" style={{ marginBottom: "1rem", padding: "12px" }}>Base de Datos de Ventas</Title>
           <ul style={{ listStyle: "none", padding: 0 }}>
-            {ventas.filter(v => v.cliente.toLowerCase().includes(busqueda.toLowerCase())).map((venta, i) => (
+          {ventas.map((venta, i) => (
               <li key={venta.id} style={{ background: "#fff", marginBottom: "10px", padding: "1rem", borderRadius: "8px", boxShadow: "0 2px 6px rgba(0,0,0,0.1)" }}>
                 <FlexBox justifyContent="SpaceBetween" alignItems="Center">
                   <div>
@@ -128,8 +128,6 @@ export default function Venta() {
           footer={<Button onClick={() => { agregarVenta(); setOpenCrear(false); }} design="Emphasized">Guardar</Button>}
         >
           <FlexBox style={{ padding: "1rem", gap: "1rem" }} direction="Column">
-            <Input placeholder="Cliente" value={nuevaVenta.cliente} onInput={(e) => setNuevaVenta({ ...nuevaVenta, cliente: e.target.value })} />
-            <Input placeholder="Fecha" value={nuevaVenta.fecha} onInput={(e) => setNuevaVenta({ ...nuevaVenta, fecha: e.target.value })} />
             <Title level="H6">Productos</Title>
             {nuevaVenta.productos.map((p, i) => (
               <div key={i}>• {p.nombre} - {p.cantidad} x ${p.costo_unitario}</div>
@@ -144,8 +142,6 @@ export default function Venta() {
         <Dialog headerText="Detalle de Venta" open={!!detalleVenta} onAfterClose={() => setDetalleVenta(null)} footer={<Button onClick={() => setDetalleVenta(null)}>Cerrar</Button>}>
           {detalleVenta && (
             <div style={{ padding: "1rem" }}>
-              <p><b>Cliente:</b> {detalleVenta.cliente}</p>
-              <p><b>Fecha:</b> {detalleVenta.fecha}</p>
               <p><b>Productos:</b></p>
               <ul>
                 {detalleVenta.productos.map((p, i) => (
