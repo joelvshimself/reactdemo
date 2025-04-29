@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ShellBar,
@@ -9,9 +9,12 @@ import {
   Text,
   FlexBox,
   Button,
-  Dialog,
+  Popover
 } from "@ui5/webcomponents-react";
+import toast, { Toaster } from "react-hot-toast";
 import { Grid } from "@mui/material";
+
+import { agregarNotificacion, mensajesNotificaciones } from "./Notificaciones";
 
 import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
@@ -27,13 +30,8 @@ export default function Home() {
   const navigate = useNavigate();
   const [isSidebarOpen] = useState(true);
   const [openNotificaciones, setOpenNotificaciones] = useState(false);
-
-  const notificaciones = [
-    { id: 1, mensaje: "Nueva orden recibida" },
-    { id: 2, mensaje: "Se ha cancelado una venta" },
-    { id: 3, mensaje: "Stock bajo en carne de cerdo" },
-    { id: 4, mensaje: "Usuario nuevo registrado" },
-  ];
+  const [notificaciones, setNotificaciones] = useState([]);
+  const notiButtonRef = useRef(null);
 
   const handleNavigationClick = (event) => {
     const selected = event.detail.item.dataset.route;
@@ -56,7 +54,7 @@ export default function Home() {
         }}
       />
 
-      {/* Botón flotante de notificaciones con badge */}
+      {/* Botón flotante de notificaciones */}
       <div
         style={{
           position: "fixed",
@@ -69,26 +67,25 @@ export default function Home() {
           <Button
             icon="bell"
             design="Transparent"
+            ref={notiButtonRef}
             onClick={() => setOpenNotificaciones(true)}
           />
-          {notificaciones.length > 0 && (
-            <span
-              style={{
-                position: "absolute",
-                top: "-4px",
-                right: "-4px",
-                backgroundColor: "red",
-                color: "white",
-                borderRadius: "50%",
-                padding: "2px 6px",
-                fontSize: "10px",
-                fontWeight: "bold",
-                zIndex: 2000,
-              }}
-            >
-              {notificaciones.length}
-            </span>
-          )}
+          <span
+            style={{
+              position: "absolute",
+              top: "-4px",
+              right: "-4px",
+              backgroundColor: "red",
+              color: "white",
+              borderRadius: "50%",
+              padding: "2px 6px",
+              fontSize: "10px",
+              fontWeight: "bold",
+              zIndex: 2000,
+            }}
+          >
+            {notificaciones.length}
+          </span>
         </div>
       </div>
 
@@ -185,24 +182,34 @@ export default function Home() {
         </Grid>
       </FlexBox>
 
-      <Dialog
-        headerText="Notificaciones recientes"
-        open={openNotificaciones}
-        onAfterClose={() => setOpenNotificaciones(false)}
-        footer={
-          <Button onClick={() => setOpenNotificaciones(false)} design="Emphasized">
-            Cerrar
-          </Button>
-        }
-      >
-        <ul style={{ padding: "1rem", margin: 0, listStyle: "none" }}>
-          {notificaciones.map((n) => (
-            <li key={n.id} style={{ padding: "0.5rem 0", borderBottom: "1px solid #ddd" }}>
-              🔔 {n.mensaje}
-            </li>
-          ))}
-        </ul>
-      </Dialog>
+      {notiButtonRef.current && (
+        <Popover
+          headerText="Notificaciones recientes"
+          open={openNotificaciones}
+          opener={notiButtonRef.current}
+          onClose={() => setOpenNotificaciones(false)}
+        >
+          <FlexBox direction="Column" style={{ padding: "1rem", gap: "0.5rem", maxHeight: "300px", overflowY: "auto" }}>
+            {notificaciones.map((noti) => (
+              <div key={noti.id} style={{ padding: "0.5rem", borderBottom: "1px solid #ccc" }}>
+                <Text>{noti.mensaje}</Text>
+              </div>
+            ))}
+
+            <Button onClick={() => agregarNotificacion("success", mensajesNotificaciones.exito, setNotificaciones)}>
+              Agregar Notificación de Éxito
+            </Button>
+            <Button onClick={() => agregarNotificacion("info", mensajesNotificaciones.info, setNotificaciones)}>
+              Agregar Notificación Informativa
+            </Button>
+            <Button onClick={() => agregarNotificacion("error", mensajesNotificaciones.error, setNotificaciones)}>
+              Agregar Notificación de Error
+            </Button>
+          </FlexBox>
+        </Popover>
+      )}
+
+      <Toaster position="top-center" reverseOrder={false} />
     </FlexBox>
   );
 }
