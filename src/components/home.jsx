@@ -14,7 +14,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import { Grid } from "@mui/material";
 
-import { agregarNotificacion, mensajesNotificaciones } from "./Notificaciones"; // 👈 Importar funciones del otro archivo
+import { agregarNotificacion, mensajesNotificaciones } from "./Notificaciones";
 
 import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
@@ -24,7 +24,6 @@ import "@ui5/webcomponents-icons/dist/shipping-status.js";
 import "@ui5/webcomponents-icons/dist/cart.js";
 import "@ui5/webcomponents-icons/dist/bell.js";
 
-// Definir ancho del drawer
 const drawerWidth = 240;
 
 export default function Home() {
@@ -71,7 +70,6 @@ export default function Home() {
             ref={notiButtonRef}
             onClick={() => setOpenNotificaciones(true)}
           />
-          {/* Contador de notificaciones */}
           <span
             style={{
               position: "absolute",
@@ -184,7 +182,6 @@ export default function Home() {
         </Grid>
       </FlexBox>
 
-      {/* Solo renderiza el Popover si el notiButtonRef está listo */}
       {notiButtonRef.current && (
         <Popover
           headerText="Notificaciones recientes"
@@ -212,7 +209,6 @@ export default function Home() {
         </Popover>
       )}
 
-      {/* Toaster para mostrar notificaciones */}
       <Toaster position="top-center" reverseOrder={false} />
     </FlexBox>
   );

@@ -8,7 +8,6 @@ export default function TwoFAScreen() {
   const location = useLocation();
   const email = location.state?.email;
 
-  // Verifica si el usuario ya tiene 2FA activado
   useEffect(() => {
     const check2FA = async () => {
       const res = await fetch("http://localhost:3000/api/auth/check-2fa", {
@@ -55,35 +54,102 @@ export default function TwoFAScreen() {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>Autenticación en 2 Pasos</h2>
-
-      {qr === null && (
-        <>
-          <p>Presiona para generar tu código QR:</p>
-          <button onClick={generate2FA}>Generar QR</button>
-        </>
-      )}
-
-      {qr === "yaActivado" && (
-        <p>Ya tienes activado Google Authenticator. Ingresa tu código:</p>
-      )}
-
-      {qr && qr !== "yaActivado" && (
-        <img src={qr} alt="Escanea el código con Google Authenticator" />
-      )}
-
-      {(qr || qr === "yaActivado") && (
-        <div style={{ marginTop: "1rem" }}>
-          <input
-            type="text"
-            placeholder="Código de 6 dígitos"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
+    <div
+      style={{
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        flexDirection: "row",
+        overflow: "hidden",
+      }}
+    >
+      {/* Mitad izquierda: formulario */}
+      <div
+        style={{
+          width: "50%",
+          background: "linear-gradient(135deg, #8B0000, #E53935)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "white",
+            padding: "2rem",
+            borderRadius: "16px",
+            maxWidth: "400px",
+            width: "100%",
+            textAlign: "center",
+            color: "#000000", // ✅ Texto en negro
+          }}
+        >
+          <img
+            src="/viba1.png"
+            alt="Carnes ViBa"
+            style={{ width: "150px", margin: "0 auto 20px auto" }}
           />
-          <button onClick={verify2FA}>Verificar Código</button>
+
+          <h2 style={{ marginBottom: "1rem", color: "#000" }}>
+            Autenticación en 2 Pasos
+          </h2>
+
+          {qr === null && (
+            <>
+              <p style={{ color: "#000" }}>Presiona para generar tu código QR:</p>
+              <button onClick={generate2FA}>Generar QR</button>
+            </>
+          )}
+
+          {qr === "yaActivado" && (
+            <p style={{ color: "#000" }}>
+              Ya tienes activado Google Authenticator. Ingresa tu código:
+            </p>
+          )}
+
+          {qr && qr !== "yaActivado" && (
+            <img
+              src={qr}
+              alt="Escanea el código"
+              style={{ marginTop: "1rem", width: "100%" }}
+            />
+          )}
+
+          {(qr || qr === "yaActivado") && (
+            <div style={{ marginTop: "1.5rem" }}>
+              <input
+                type="text"
+                placeholder="Código de 6 dígitos"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                style={{
+                  padding: "0.5rem",
+                  width: "100%",
+                  marginBottom: "1rem",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  backgroundColor: "#333",    
+                  color: "#fff",              
+                  fontSize: "16px",            
+                  textAlign: "center"          
+                }}
+              />
+              <button onClick={verify2FA}>Verificar Código</button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Mitad derecha: imagen */}
+      <div
+        style={{
+          width: "50%",
+          backgroundImage: "url('/carne.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
     </div>
   );
 }
