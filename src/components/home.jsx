@@ -11,7 +11,7 @@ import {
   Button,
   Popover
 } from "@ui5/webcomponents-react";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import { Grid } from "@mui/material";
 
 import { agregarNotificacion, mensajesNotificaciones } from "./Notificaciones";
@@ -109,74 +109,24 @@ export default function Home() {
         </div>
       )}
 
-      <FlexBox
-        direction="Column"
-        style={{
-          flexGrow: 1,
-          padding: "2rem",
-          marginTop: "4rem",
-          backgroundColor: "#fafafa",
-          minHeight: "100vh",
-        }}
-      >
-        <Grid container spacing={2}>
-          {[{ title: "75", subtitle: "Clientes registrados" },
-            { title: "357", subtitle: "Proveedores totales" },
-            { title: "65", subtitle: "Ordenes canceladas" },
-            { title: "$128", subtitle: "Ganancias totales" },
-          ].map((stat, i) => (
-            <Grid item xs={6} md={3} key={i}>
-              <Card style={{ padding: "1rem" }}>
-                <div style={{ paddingInline: "0.5rem" }}>
-                  <Title level="H5">{stat.title}</Title>
-                  <Text style={{ color: "#666", fontSize: "14px", marginTop: 4 }}>
-                    {stat.subtitle}
-                  </Text>
-                </div>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+<FlexBox
+  direction="Column"
+  style={{
+    flexGrow: 1,
+    padding: "2rem",
+    marginTop: "4rem",
+    backgroundColor: "#fafafa",
+    minHeight: "100vh",
+    justifyContent: "center",
+    alignItems: "center",
+  }}
+>
+  <Title style={{ marginTop: "0rem", fontSize: "60px", color: "#000" }}>¡Bienvenido a Logiviba!</Title>
+  <Text style={{ marginTop: "1rem", fontSize: "18px", color: "#666" }}>
+    Tu sistema de gestión logística inteligente
+  </Text>
+</FlexBox>
 
-        <Grid container spacing={2} style={{ marginTop: "1rem" }}>
-          <Grid item xs={12} md={6}>
-            <Card style={{ height: 300, padding: "1rem" }}>
-              <Title level="H6">Predicción de demanda</Title>
-              <FlexBox
-                direction="Column"
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#eee",
-                  height: "100%",
-                  marginTop: "1rem",
-                  borderRadius: "8px",
-                }}
-              >
-                <Text style={{ fontSize: "12px", color: "#777" }}>contenido</Text>
-              </FlexBox>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card style={{ height: 300, padding: "1rem" }}>
-              <Title level="H6">Tiempo en recibir un pedido</Title>
-              <FlexBox
-                direction="Column"
-                style={{
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#eee",
-                  height: "100%",
-                  marginTop: "1rem",
-                  borderRadius: "8px",
-                }}
-              >
-                <Text style={{ fontSize: "12px", color: "#777" }}>contenido</Text>
-              </FlexBox>
-            </Card>
-          </Grid>
-        </Grid>
-      </FlexBox>
 
       {notiButtonRef.current && (
         <Popover
