@@ -10,7 +10,7 @@ export default function TwoFAScreen() {
 
   useEffect(() => {
     const check2FA = async () => {
-      const res = await fetch("http://localhost:3000/api/auth/check-2fa", {
+      const res = await fetch("http://localhost:3000/api/auth/2fa/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -28,7 +28,7 @@ export default function TwoFAScreen() {
   }, [email]);
 
   const generate2FA = async () => {
-    const res = await fetch("http://localhost:3000/api/auth/generate-2fa", {
+    const res = await fetch("http://localhost:3000/api/auth/2fa/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -39,7 +39,7 @@ export default function TwoFAScreen() {
   };
 
   const verify2FA = async () => {
-    const res = await fetch("http://localhost:3000/api/auth/verify-2fa", {
+    const res = await fetch("http://localhost:3000/api/auth/2fa/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, email }),
