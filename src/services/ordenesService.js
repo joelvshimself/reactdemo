@@ -36,3 +36,12 @@ export const updateOrden = async (id, datos) => {
     return false;
   }
 };
+export const completarOrden = async (id) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/completarorden/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al completar orden:", error.response?.data || error.message);
+    throw error;
+  }
+};

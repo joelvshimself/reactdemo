@@ -23,6 +23,7 @@ import "@ui5/webcomponents-icons/dist/edit.js";
 import { getOrdenes } from "../services/ordenesService";
 import { createOrden } from "../services/ordenesService";
 import { deleteOrden, updateOrden } from "../services/ordenesService";
+import { completarOrden } from "../services/ordenesService";
 
 
 
@@ -83,6 +84,17 @@ export default function Ordenes() {
     }
     setOrdenesSeleccionadas([]);
     await loadOrdenes();
+  };
+  const manejarCompletarOrden = async () => {
+    const ordenId = ordenesSeleccionadas[0];
+    try {
+      const respuesta = await completarOrden(ordenId);
+      alert(respuesta.message || `Orden ${ordenId} completada.`);
+      await loadOrdenes(); // Recargar la lista
+      setOrdenesSeleccionadas([]);
+    } catch (error) {
+      alert(error.response?.data?.error || "Error al completar la orden.");
+    }
   };
   const agregarProducto = () => {
     setNuevaOrden({
@@ -185,6 +197,14 @@ export default function Ordenes() {
               setOpenEditar(true);
             }
           }}>Editar</Button>
+          <Button
+            design="Positive"
+            icon="shipping-status"
+            disabled={ordenesSeleccionadas.length !== 1}
+            onClick={manejarCompletarOrden}
+          >
+            Completar
+          </Button>
         </FlexBox>
 
 
