@@ -8,7 +8,6 @@ const removeToken = () => localStorage.removeItem("token");
 // Verificar si el usuario esta autenticado
 const isAuthenticated = () => !!getToken();
 
-// Login
 const login = async (email, password) => {
   try {
     const response = await fetch(`${API_URL}/login`, {
@@ -19,7 +18,17 @@ const login = async (email, password) => {
 
     const data = await response.json();
     if (response.ok) {
-      setToken(data.token);
+      const token = data.token;
+      setToken(token);
+
+      // Decodificar el token para obtener el email
+      const payloadBase64 = token.split(".")[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64));
+      const userEmail = decodedPayload.email;
+
+      // Guardar el email del usuario
+      localStorage.setItem("userEmail", userEmail);
+
       return { success: true };
     } else {
       return { success: false, message: data.message };
@@ -28,6 +37,7 @@ const login = async (email, password) => {
     return { success: false, message: "Error en la conexión con el servidor" };
   }
 };
+
 
 // Registro
 const register = async (name, email, password) => {

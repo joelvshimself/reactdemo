@@ -1,4 +1,5 @@
 // orden.jsx
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FlexBox } from "@ui5/webcomponents-react";
 import {
@@ -9,57 +10,65 @@ import {
   Title,
   Input,
   Button,
-  Dialog,
-  Select,
-  Option
+  Dialog
 } from "@ui5/webcomponents-react";
 import "@ui5/webcomponents-icons/dist/home.js";
 import "@ui5/webcomponents-icons/dist/retail-store.js";
 import "@ui5/webcomponents-icons/dist/employee.js";
 import "@ui5/webcomponents-icons/dist/shipping-status.js";
 import "@ui5/webcomponents-icons/dist/cart.js";
-import "@ui5/webcomponents-icons/dist/navigation-right-arrow.js";
 import "@ui5/webcomponents-icons/dist/delete.js";
 import "@ui5/webcomponents-icons/dist/add.js";
 import "@ui5/webcomponents-icons/dist/edit.js";
-import { useNavigate } from "react-router-dom";
-import {
-  getOrdenes,
-  createOrden,
-  updateOrden,
-  deleteOrden
-} from "../services/ordenesService";
+import { getOrdenes } from "../services/ordenesService";
+import { createOrden } from "../services/ordenesService";
+import { deleteOrden, updateOrden } from "../services/ordenesService";
+
+
 
 const drawerWidth = 240;
 
 export default function Ordenes() {
   const navigate = useNavigate();
-  const [isSidebarOpen] = useState(true);
   const [openCrear, setOpenCrear] = useState(false);
   const [openEditar, setOpenEditar] = useState(false);
   const [ordenEditar, setOrdenEditar] = useState(null);
   const [ordenesSeleccionadas, setOrdenesSeleccionadas] = useState([]);
-  const [busqueda, setBusqueda] = useState("");
   const [ordenes, setOrdenes] = useState([]);
-
-  const [filtroEstado, setFiltroEstado] = useState("none");
-  const [filtroFecha, setFiltroFecha] = useState("none");
-  const [filtroUsuario, setFiltroUsuario] = useState("none");
 
   const [nuevaOrden, setNuevaOrden] = useState({
     estado: "",
-    fecha: "",
-    id_usuario: ""
+    fecha_emision: "",
+    fecha_recepcion: "",
+    fecha_estimada: "",
+    subtotal: "",
+    costo: "",
+    usuario_solicita: "",
+    usuario_provee: "",
+    productos: []
   });
+
+  const [nuevoProducto, setNuevoProducto] = useState({
+    producto: "",   // antes era "nombre"
+    cantidad: "",
+    precio: "",
+    fecha_caducidad: ""
+  });
+
 
   const loadOrdenes = async () => {
     const data = await getOrdenes();
     setOrdenes(
       data.map((o) => ({
         id: o.ID_ORDEN,
+        fecha_emision: o.FECHA_EMISION,
+        fecha_recepcion: o.FECHA_RECEPCION,
+        fecha_estimada: o.FECHA_RECEPCION_ESTIMADA,
         estado: o.ESTADO,
-        fecha: o.FECHA,
-        id_usuario: o.ID_USUARIO
+        subtotal: o.SUBTOTAL,
+        costo: o.COSTO_COMPRA,
+        usuario_solicita: o.ID_USUARIO_SOLICITA,
+        usuario_provee: o.ID_USUARIO_PROVEE
       }))
     );
   };
@@ -75,17 +84,44 @@ export default function Ordenes() {
     setOrdenesSeleccionadas([]);
     await loadOrdenes();
   };
+  const agregarProducto = () => {
+    setNuevaOrden({
+      ...nuevaOrden,
+      productos: [...(nuevaOrden.productos || []), nuevoProducto]
+    });
+    setNuevoProducto({ producto: "", cantidad: "", precio: "", fecha_caducidad: "" });
+  };
 
   const agregarOrden = async () => {
-    const ok = await createOrden(nuevaOrden);
-    if (ok) {
+    const datos = {
+      correo_solicita: nuevaOrden.usuario_solicita,
+      correo_provee: nuevaOrden.usuario_provee,
+      productos: nuevaOrden.productos  // ya no es necesario map
+    };
+
+    console.log("📦 Payload que se enviará:", datos);
+
+    const response = await createOrden(datos);
+
+    if (response && response.id_orden) {
+      alert(`Orden creada exitosamente con ID: ${response.id_orden}`);
       await loadOrdenes();
-      setNuevaOrden({ estado: "", fecha: "", id_usuario: "" });
-      alert("Orden creada correctamente");
+      setNuevaOrden({
+        estado: "",
+        fecha_emision: "",
+        fecha_recepcion: "",
+        fecha_estimada: "",
+        subtotal: "",
+        costo: "",
+        usuario_solicita: "",
+        usuario_provee: "",
+        productos: []
+      });
     } else {
       alert("Error al crear orden");
     }
   };
+
 
   const handleEditarGuardar = async () => {
     const ok = await updateOrden(ordenEditar.id, ordenEditar);
@@ -99,146 +135,114 @@ export default function Ordenes() {
     }
   };
 
-  const handleNavigationClick = (event) => {
-    const selected = event.detail.item.dataset.route;
-    if (selected) navigate(selected);
+  const handleNavigationClick = (e) => {
+    const route = e.detail.item.dataset.route;
+    if (route) navigate(route);
   };
 
   return (
     <FlexBox direction="Row" style={{ height: "100vh", width: "100vw" }}>
       <ShellBar
-        logo={<img src="/viba1.png" alt="Carnes ViBa" style={{ height: "40px" }} />}
-        primaryTitle="Órdenes"
-        onProfileClick={() => navigate("/login")}
+        logo={<img src="/viba1.png" alt="ViBa" style={{ height: "40px" }} />}
+        primaryTitle="Fs"
         profile={{ image: "/viba1.png" }}
-        style={{
-          width: "100%",
-          background: "#B71C1C",
-          color: "white",
-          position: "fixed",
-          zIndex: 1201
-        }}
+        style={{ width: "100%", background: "#B71C1C", color: "white", position: "fixed", zIndex: 1201 }}
       />
+      <div style={{ width: 240, marginTop: "3.5rem", backgroundColor: "#fff" }}>
+        <SideNavigation onSelectionChange={handleNavigationClick}>
+          <SideNavigationItem icon="home" text="Dashboard" data-route="/home" />
+          <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
+          <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
+          <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
+          <SideNavigationItem icon="cart" text="Ventas" data-route="/venta" />
+        </SideNavigation>
+      </div>
 
-      {isSidebarOpen && (
-        <div
-          style={{
-            width: drawerWidth,
-            marginTop: "3.5rem",
-            height: "calc(100vh - 3.5rem)",
-            backgroundColor: "#fff",
-            boxShadow: "2px 0 5px rgba(0,0,0,0.05)"
-          }}
-        >
-          <SideNavigation onSelectionChange={handleNavigationClick}>
-            <SideNavigationItem icon="home" text="Dashboard" data-route="/Home" />
-            <SideNavigationItem icon="retail-store" text="Producto" data-route="/producto" />
-            <SideNavigationItem icon="employee" text="Usuarios" data-route="/usuarios" />
-            <SideNavigationItem icon="shipping-status" text="Órdenes" data-route="/orden" />
-            <SideNavigationItem icon="cart" text="Ventas" data-route="/venta" />
-          </SideNavigation>
-        </div>
-      )}
 
-      <FlexBox
-        direction="Column"
-        style={{ flexGrow: 1, padding: "2rem", marginTop: "4rem", backgroundColor: "#fafafa", minHeight: "100vh" }}
-      >
-        <Title level="H3" style={{ marginBottom: "1rem" }}>Órdenes</Title>
+      <FlexBox direction="Column" style={{ flexGrow: 1, padding: "2rem", marginTop: "4rem", backgroundColor: "#fafafa" }}>
+        <Title level="H3">Órdenes</Title>
 
-        <FlexBox direction="Row" justifyContent="SpaceBetween" style={{ marginBottom: "1rem" }}>
-          <Input
-            placeholder="Buscar por Estado"
-            style={{ width: "300px" }}
-            icon="search"
-            value={busqueda}
-            onInput={(e) => setBusqueda(e.target.value)}
-          />
-          <FlexBox direction="Row" wrap style={{ gap: "0.5rem" }}>
-            <Button design="Negative" icon="delete" onClick={eliminarOrdenesSeleccionadas} disabled={ordenesSeleccionadas.length === 0}>Eliminar</Button>
-            <Button design="Emphasized" icon="add" onClick={() => setOpenCrear(true)}>Crear</Button>
-            <Button design="Attention" icon="edit" disabled={ordenesSeleccionadas.length !== 1} onClick={() => {
-              const ordenToEdit = ordenes.find(o => o.id === ordenesSeleccionadas[0]);
-              if (ordenToEdit) {
-                setOrdenEditar(ordenToEdit);
-                setOpenEditar(true);
-              }
-            }}>Editar</Button>
-          </FlexBox>
+        <FlexBox direction="Row" justifyContent="End" style={{ marginBottom: "1rem", gap: "0.75rem" }}>
+          <Button design="Negative" icon="delete" onClick={eliminarOrdenesSeleccionadas} disabled={ordenesSeleccionadas.length === 0}>Eliminar</Button>
+          <Button
+            design="Emphasized"
+            icon="add"
+            onClick={() => {
+              const emailUsuario = localStorage.getItem("userEmail") || "";
+              setNuevaOrden(prev => ({
+                ...prev,
+                usuario_solicita: emailUsuario  // precargar
+              }));
+              setOpenCrear(true);
+            }}
+          >
+            Crear
+          </Button>
+          <Button design="Attention" icon="edit" disabled={ordenesSeleccionadas.length !== 1} onClick={() => {
+            const ordenToEdit = ordenes.find(o => o.id === ordenesSeleccionadas[0]);
+            if (ordenToEdit) {
+              setOrdenEditar(ordenToEdit);
+              setOpenEditar(true);
+            }
+          }}>Editar</Button>
         </FlexBox>
 
-        <Card style={{ padding: "1rem", marginTop: "1rem" }}>
-          <Title level="H5" style={{ marginBottom: "1rem", padding: "12px" }}>Base de Datos de Órdenes</Title>
-          <div style={{ overflowY: "auto", maxHeight: "520px" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "sans-serif" }}>
-              <thead style={{ backgroundColor: "#f5f5f5" }}>
+
+
+        <Card style={{
+          marginTop: "2rem",
+          padding: "1rem",
+          borderRadius: "12px",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+          border: "1px solid #e0e0e0"
+        }}>
+          <Title level="H5" style={{ marginTop: "1rem", marginLeft: "1rem", marginRight: "1rem", marginBottom: "1rem" }}>
+            Base de Datos de Órdenes
+          </Title>
+          <div style={{ overflowX: "auto", borderRadius: "8px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: "Segoe UI", fontSize: "14px" }}>
+              <thead style={{ backgroundColor: "#f9f9f9", position: "sticky", top: 0 }}>
                 <tr>
-                  <th style={{ textAlign: "center" }}></th>
-                  <th style={{ textAlign: "center" }}>Imagen</th>
-                  <th style={{ textAlign: "center" }}>Cliente</th>
-                  <th style={{ textAlign: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                      Fecha
-                      <Select style={{ width: "50px", fontSize: "0.75rem" }} onChange={(e) => setFiltroFecha(e.target.value)}>
-                        <Option value="none">⇅</Option>
-                        <Option value="asc">↑</Option>
-                        <Option value="desc">↓</Option>
-                      </Select>
-                    </div>
-                  </th>
-                  <th style={{ textAlign: "center" }}>Pago</th>
-                  <th style={{ textAlign: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                      Estado
-                      <Select style={{ width: "50px", fontSize: "0.75rem" }} onChange={(e) => setFiltroEstado(e.target.value)}>
-                        <Option value="none">⇅</Option>
-                        <Option value="asc">↑ A-Z</Option>
-                        <Option value="desc">↓ Z-A</Option>
-                      </Select>
-                    </div>
-                  </th>
-                  <th style={{ textAlign: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                      ID Usuario
-                      <Select style={{ width: "50px", fontSize: "0.75rem" }} onChange={(e) => setFiltroUsuario(e.target.value)}>
-                        <Option value="none">⇅</Option>
-                        <Option value="asc">1-1000</Option>
-                        <Option value="desc">1000-1</Option>
-                      </Select>
-                    </div>
-                  </th>
+                  <th style={{ padding: "12px", textAlign: "left" }}></th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>ID Orden</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Fecha Emisión</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Recepción</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Recepción Estimada</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Estado</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Subtotal</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Costo Compra</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Solicitante</th>
+                  <th style={{ padding: "12px", textAlign: "left" }}>Proveedor</th>
                 </tr>
               </thead>
               <tbody>
-                {[...ordenes].filter((o) => o.estado.toLowerCase().includes(busqueda.toLowerCase())).sort((a, b) => {
-                  if (filtroEstado !== "none") return filtroEstado === "asc" ? a.estado.localeCompare(b.estado) : b.estado.localeCompare(a.estado);
-                  if (filtroFecha !== "none") return filtroFecha === "asc" ? a.fecha.localeCompare(b.fecha) : b.fecha.localeCompare(a.fecha);
-                  if (filtroUsuario !== "none") return filtroUsuario === "asc" ? parseInt(a.id_usuario) - parseInt(b.id_usuario) : parseInt(b.id_usuario) - parseInt(a.id_usuario);
-                  return 0;
-                }).map((orden) => (
-                  <tr key={orden.id} style={{ borderBottom: "1px solid #eee" }}>
-                    <td style={{ textAlign: "center", padding: "4px" }}>
-                      <input type="checkbox" checked={ordenesSeleccionadas.includes(orden.id)} onChange={(e) => {
-                        const checked = e.target.checked;
-                        if (checked) {
-                          setOrdenesSeleccionadas([...ordenesSeleccionadas, orden.id]);
-                        } else {
-                          setOrdenesSeleccionadas(ordenesSeleccionadas.filter((id) => id !== orden.id));
-                        }
-                      }} />
+                {ordenes.map((orden) => (
+                  <tr key={orden.id} style={{ borderBottom: "1px solid #eee", backgroundColor: "#fff" }}>
+                    <td style={{ padding: "10px" }}>
+                      <input
+                        type="checkbox"
+                        checked={ordenesSeleccionadas.includes(orden.id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setOrdenesSeleccionadas(prev =>
+                            checked
+                              ? [...prev, orden.id]
+                              : prev.filter(id => id !== orden.id)
+                          );
+                        }}
+                      />
                     </td>
-                    <td style={{ textAlign: "center", padding: "4px" }}>
-                      <img src="/carne.png" alt="Producto" style={{ width: "30px", borderRadius: "6px" }} />
+                    <td style={{ padding: "10px" }}>{orden.id}</td>
+                    <td style={{ padding: "10px" }}>{orden.fecha_emision}</td>
+                    <td style={{ padding: "10px" }}>{orden.fecha_recepcion}</td>
+                    <td style={{ padding: "10px" }}>{orden.fecha_estimada}</td>
+                    <td style={{ padding: "10px", fontWeight: "bold", color: orden.estado === "completada" ? "#388e3c" : "#f57c00" }}>
+                      {orden.estado}
                     </td>
-                    <td style={{ textAlign: "center", padding: "4px" }}>Leslie Alexander</td>
-                    <td style={{ textAlign: "center", padding: "4px" }}>{orden.fecha}</td>
-                    <td style={{ textAlign: "center", padding: "4px" }}>
-                      <span style={{ padding: "2px 6px", backgroundColor: orden.id % 2 === 0 ? "#c8f7c5" : "#fde2c5", color: orden.id % 2 === 0 ? "#1c7f00" : "#944a00", borderRadius: "6px", fontWeight: "bold" }}>{orden.id % 2 === 0 ? "Pagado" : "No pagado"}</span>
-                    </td>
-                    <td style={{ textAlign: "center", padding: "4px" }}>
-                      <span style={{ padding: "2px 6px", backgroundColor: orden.estado.toLowerCase() === "envio" ? "#dcd0ff" : orden.estado.toLowerCase() === "cancelado" ? "#ffbdbd" : "#eee", borderRadius: "6px", fontWeight: "bold" }}>{orden.estado}</span>
-                    </td>
-                    <td style={{ textAlign: "center", padding: "4px" }}>{orden.id_usuario}</td>
+                    <td style={{ padding: "10px" }}>${orden.subtotal}</td>
+                    <td style={{ padding: "10px" }}>${orden.costo}</td>
+                    <td style={{ padding: "10px" }}>{orden.usuario_solicita}</td>
+                    <td style={{ padding: "10px" }}>{orden.usuario_provee}</td>
                   </tr>
                 ))}
               </tbody>
@@ -246,20 +250,80 @@ export default function Ordenes() {
           </div>
         </Card>
 
-        <Dialog headerText="Agregar Orden" open={openCrear} onAfterClose={() => setOpenCrear(false)} footer={<Button design="Emphasized" onClick={() => { agregarOrden(); setOpenCrear(false); }}>Guardar</Button>}>
-          <FlexBox style={{ padding: "1rem", gap: "1rem" }}>
-            <Input placeholder="Estado" value={nuevaOrden.estado} onInput={(e) => setNuevaOrden({ ...nuevaOrden, estado: e.target.value })} />
-            <Input placeholder="Fecha" value={nuevaOrden.fecha} onInput={(e) => setNuevaOrden({ ...nuevaOrden, fecha: e.target.value })} />
-            <Input placeholder="ID Usuario" value={nuevaOrden.id_usuario} onInput={(e) => setNuevaOrden({ ...nuevaOrden, id_usuario: e.target.value })} />
+        <Dialog
+          headerText="Agregar Orden"
+          open={openCrear}
+          onAfterClose={() => setOpenCrear(false)}
+          footer={
+            <Button
+              design="Emphasized"
+              onClick={() => {
+                if (!nuevaOrden.usuario_solicita.trim() || !nuevaOrden.usuario_provee.trim()) {
+                  alert("⚠️ Por favor completa los correos de quien solicita y quien provee.");
+                  return;
+                }
+                agregarOrden();
+                setOpenCrear(false);
+              }}
+            >
+              Guardar
+            </Button>
+
+          }
+        >
+          <FlexBox style={{ padding: "1rem", gap: "1rem" }} direction="Column">
+            {/* Sección de correos */}
+            <Title level="H6">Información de usuarios</Title>
+            <Input
+              placeholder="Correo quien solicita"
+              value={nuevaOrden.usuario_solicita}
+              onInput={(e) => setNuevaOrden({ ...nuevaOrden, usuario_solicita: e.target.value })}
+            />
+            <Input
+              placeholder="Correo quien provee"
+              value={nuevaOrden.usuario_provee}
+              onInput={(e) => setNuevaOrden({ ...nuevaOrden, usuario_provee: e.target.value })}
+            />
+
+            {/* Sección de productos */}
+            <Title level="H6">Producto a agregar</Title>
+            <Input
+              placeholder="Producto"
+              value={nuevoProducto.producto}
+              onInput={(e) => setNuevoProducto({ ...nuevoProducto, producto: e.target.value })}
+            />
+            <Input
+              placeholder="Cantidad"
+              value={nuevoProducto.cantidad}
+              onInput={(e) => setNuevoProducto({ ...nuevoProducto, cantidad: e.target.value })}
+            />
+            <Input
+              placeholder="Precio"
+              value={nuevoProducto.precio}
+              onInput={(e) => setNuevoProducto({ ...nuevoProducto, precio: e.target.value })}
+            />
+            <Input
+              placeholder="Fecha de Caducidad"
+              value={nuevoProducto.fecha_caducidad}
+              onInput={(e) => setNuevoProducto({ ...nuevoProducto, fecha_caducidad: e.target.value })}
+            />
+            <Button onClick={agregarProducto} design="Transparent">
+              Agregar producto
+            </Button>
+
           </FlexBox>
         </Dialog>
-
         <Dialog headerText="Editar Orden" open={openEditar} onAfterClose={() => setOpenEditar(false)} footer={<Button design="Emphasized" onClick={handleEditarGuardar}>Guardar</Button>}>
           {ordenEditar && (
             <FlexBox style={{ padding: "1rem", gap: "1rem" }}>
               <Input placeholder="Estado" value={ordenEditar.estado} onInput={(e) => setOrdenEditar({ ...ordenEditar, estado: e.target.value })} />
-              <Input placeholder="Fecha" value={ordenEditar.fecha} onInput={(e) => setOrdenEditar({ ...ordenEditar, fecha: e.target.value })} />
-              <Input placeholder="ID Usuario" value={ordenEditar.id_usuario} onInput={(e) => setOrdenEditar({ ...ordenEditar, id_usuario: e.target.value })} />
+              <Input placeholder="Fecha Emisión" value={ordenEditar.fecha_emision} onInput={(e) => setOrdenEditar({ ...ordenEditar, fecha_emision: e.target.value })} />
+              <Input placeholder="Recepción" value={ordenEditar.fecha_recepcion} onInput={(e) => setOrdenEditar({ ...ordenEditar, fecha_recepcion: e.target.value })} />
+              <Input placeholder="Recepción Estimada" value={ordenEditar.fecha_estimada} onInput={(e) => setOrdenEditar({ ...ordenEditar, fecha_estimada: e.target.value })} />
+              <Input placeholder="Subtotal" value={ordenEditar.subtotal} onInput={(e) => setOrdenEditar({ ...ordenEditar, subtotal: e.target.value })} />
+              <Input placeholder="Costo Compra" value={ordenEditar.costo} onInput={(e) => setOrdenEditar({ ...ordenEditar, costo: e.target.value })} />
+              <Input placeholder="ID Usuario Solicita" value={ordenEditar.usuario_solicita} onInput={(e) => setOrdenEditar({ ...ordenEditar, usuario_solicita: e.target.value })} />
+              <Input placeholder="ID Usuario Provee" value={ordenEditar.usuario_provee} onInput={(e) => setOrdenEditar({ ...ordenEditar, usuario_provee: e.target.value })} />
             </FlexBox>
           )}
         </Dialog>

@@ -62,9 +62,9 @@ crudr.post('/nuevaorden', async (req, res) => {
   try {
     connection = await poolPromise;
 
-    // 1. Obtener ID del solicitante
+    // Buscar ID del solicitante por correo
     const idSolicitaQuery = await connection.exec(
-      `SELECT getUsuarioIdByEmail('${correo_solicita}') AS id_solicita FROM DUMMY`
+      `SELECT id_usuario AS id_solicita FROM Usuario WHERE LOWER(email) = LOWER('${correo_solicita}')`
     );
     const id_solicita = idSolicitaQuery[0]?.ID_SOLICITA;
 
@@ -74,9 +74,9 @@ crudr.post('/nuevaorden', async (req, res) => {
       });
     }
 
-    // 2. Obtener ID del proveedor
+    // Buscar ID del proveedor por correo
     const idProveeQuery = await connection.exec(
-      `SELECT getUsuarioIdByEmail('${correo_provee}') AS id_provee FROM DUMMY`
+      `SELECT id_usuario AS id_provee FROM Usuario WHERE LOWER(email) = LOWER('${correo_provee}')`
     );
     const id_provee = idProveeQuery[0]?.ID_PROVEE;
 
@@ -86,7 +86,7 @@ crudr.post('/nuevaorden', async (req, res) => {
       });
     }
 
-    // 3. Crear orden completa y recuperar ID desde SELECT
+    // Crear orden
     const crearOrdenResult = await connection.exec(`
       DO BEGIN
         DECLARE nueva_orden INT;
@@ -103,7 +103,7 @@ crudr.post('/nuevaorden', async (req, res) => {
       });
     }
 
-    // 4. Agregar subórdenes
+    // Insertar productos
     for (const producto of productos) {
       const { producto: nombre_producto, cantidad, precio } = producto;
 
@@ -118,7 +118,7 @@ crudr.post('/nuevaorden', async (req, res) => {
       );
     }
 
-    // 5. Crear notificación
+    // Crear notificación
     await connection.exec(`
       INSERT INTO Notificacion (mensaje, fecha, tipo, id_usuario)
       VALUES ('Tienes una nueva orden asignada', CURRENT_DATE, 'orden', ${id_provee})
@@ -129,16 +129,17 @@ crudr.post('/nuevaorden', async (req, res) => {
       id_orden: nueva_orden
     });
 
-  } catch (err) {
-    console.error('❌ Error crítico al crear orden:', err);
-    if (!res.headersSent) {
-      res.status(500).json({
-        error: 'Error crítico al crear orden',
-        detail: err.message
-      });
+  } catch (error) {
+    if (error.response) {
+      console.error('Error de respuesta:', error.response.data);
+    } else if (error.request) {
+      console.error('Error de solicitud:', error.request);
+    } else {
+      console.error('Error:', error.message);
     }
-  }
+  }  
 });
+
 
 /**
  * @swagger
@@ -260,7 +261,7 @@ crudr.post('/completarorden/:id', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error al completar orden:', error);
+    console.error('Error al completar orden:', error);
     res.status(500).json({
       error: 'Error al completar orden',
       detail: error.message
@@ -449,7 +450,7 @@ crudr.post('/vender', async (req, res) => {
     res.status(201).json({ message: 'Venta realizada exitosamente.', id_venta: idVenta, total: totalVenta });
 
   } catch (error) {
-    console.error('❌ Error al vender:', error);
+    console.error(' Error al vender:', error);
     res.status(500).json({ error: 'Error al procesar la venta', detail: error.message });
   }
 });
@@ -497,7 +498,7 @@ crudr.get("/ventas", async (req, res) => {
 
     res.status(200).json(Object.values(agrupadas));
   } catch (error) {
-    console.error("❌ Error al obtener ventas:", error);
+    console.error(" Error al obtener ventas:", error);
     res.status(500).json({ error: "Error al obtener ventas", detail: error.message });
   }
 });
@@ -542,7 +543,7 @@ crudr.delete("/ventas/:id", async (req, res) => {
     res.status(200).json({ message: `Venta ${ventaId} eliminada exitosamente` });
 
   } catch (error) {
-    console.error('❌ Error al eliminar venta:', error);
+    console.error(' Error al eliminar venta:', error);
     res.status(500).json({ error: 'Error al eliminar venta', detail: error.message });
   }
 });
@@ -641,8 +642,99 @@ crudr.put("/ventas/:id", async (req, res) => {
     res.status(200).json({ message: `Venta ${ventaId} actualizada`, total });
 
   } catch (error) {
-    console.error("❌ Error al actualizar venta:", error);
+    console.error(" Error al actualizar venta:", error);
     res.status(500).json({ error: "Error al actualizar venta", detail: error.message });
+  }
+});
+/**
+ * @swagger
+ * /api/ordenes:
+ *   get:
+ *     summary: Obtener todas las órdenes con detalles completos
+ *     tags: [temporal]
+ *     responses:
+ *       200:
+ *         description: Lista de órdenes
+ */
+crudr.get("/ordenes", async (req, res) => {
+  try {
+    const connection = await poolPromise;
+
+    const result = await connection.exec(`
+      SELECT
+        ID_ORDEN,
+        FECHA_EMISION,
+        FECHA_RECEPCION,
+        FECHA_RECEPCION_ESTIMADA,
+        ESTADO,
+        SUBTOTAL,
+        COSTO_COMPRA,
+        ID_USUARIO_SOLICITA,
+        ID_USUARIO_PROVEE
+      FROM ORDEN
+      ORDER BY ID_ORDEN DESC
+    `);
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(" Error al obtener órdenes:", error);
+    res.status(500).json({ error: "Error al obtener órdenes", detail: error.message });
+  }
+});
+
+crudr.delete("/ordenes/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const connection = await poolPromise;
+
+    await connection.exec(`DELETE FROM SUBORDEN WHERE ID_ORDEN = ${id}`);
+
+    await connection.exec(`DELETE FROM ORDEN WHERE ID_ORDEN = ${id}`);
+
+    res.status(200).json({ message: "Orden y subórdenes eliminadas correctamente" });
+  } catch (error) {
+    console.error("Error al eliminar orden:", error);
+    res.status(500).json({ error: "Error al eliminar orden", detail: error.message });
+  }
+});
+
+
+crudr.put("/ordenes/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const {
+      estado,
+      fecha_emision,
+      fecha_recepcion,
+      fecha_estimada,
+      subtotal,
+      costo,
+      usuario_solicita,
+      usuario_provee
+    } = req.body;
+
+    const connection = await poolPromise;
+
+    const safeValue = (value) => value ? `'${value}'` : 'NULL';
+
+    await connection.exec(`
+      UPDATE ORDEN SET
+        ESTADO = ${safeValue(estado)},
+        FECHA_EMISION = ${safeValue(fecha_emision)},
+        FECHA_RECEPCION = ${safeValue(fecha_recepcion)},
+        FECHA_RECEPCION_ESTIMADA = ${safeValue(fecha_estimada)},
+        SUBTOTAL = ${subtotal || 0},
+        COSTO_COMPRA = ${costo || 0},
+        ID_USUARIO_SOLICITA = ${safeValue(usuario_solicita)},
+        ID_USUARIO_PROVEE = ${safeValue(usuario_provee)}
+      WHERE ID_ORDEN = ${id}
+    `);
+    
+
+    res.status(200).json({ message: "Orden actualizada" });
+  } catch (error) {
+    console.error(" Error al actualizar orden:", error);
+    res.status(500).json({ error: "Error al actualizar orden", detail: error.message });
   }
 });
 

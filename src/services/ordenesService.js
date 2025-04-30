@@ -1,49 +1,38 @@
-const API_URL = "http://localhost:3000/api";
+// src/services/ordenesService.js
+import axios from "axios";
 
-const getToken = () => {
-  const token = localStorage.getItem("token");
-  return token ? `Bearer ${token.trim()}` : "";
-};
+const BASE_URL = "http://localhost:3000/api";
 
 export const getOrdenes = async () => {
-  const response = await fetch(`${API_URL}/ordenes`, {
-    headers: {
-      "Authorization": getToken()
-    }
-  });
-  return response.ok ? await response.json() : [];
+  const response = await axios.get(`${BASE_URL}/ordenes`);
+  return response.data;
 };
 
-export const createOrden = async (orden) => {
-  const response = await fetch(`${API_URL}/ordenes`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": getToken()
-    },
-    body: JSON.stringify(orden)
-  });
-  return response.ok;
+export const createOrden = async (ordenData) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/nuevaorden`, ordenData);
+    return response.data;
+  } catch (error) {
+    console.error(" Error al crear orden:", error.response?.data || error.message);
+    return null;
+  }
 };
-
-export const updateOrden = async (id, orden) => {
-  const response = await fetch(`${API_URL}/ordenes/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": getToken()
-    },
-    body: JSON.stringify(orden)
-  });
-  return response.ok;
-};
-
 export const deleteOrden = async (id) => {
-  const response = await fetch(`${API_URL}/ordenes/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Authorization": getToken()
-    }
-  });
-  return response.ok;
+  try {
+    const response = await axios.delete(`${BASE_URL}/ordenes/${id}`);
+    return response.status === 200;
+  } catch (error) {
+    console.error("Error al eliminar orden:", error.response?.data || error.message);
+    return false;
+  }
+};
+
+export const updateOrden = async (id, datos) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/ordenes/${id}`, datos);
+    return response.status === 200;
+  } catch (error) {
+    console.error("Error al actualizar orden:", error.response?.data || error.message);
+    return false;
+  }
 };
