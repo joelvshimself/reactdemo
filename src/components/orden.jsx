@@ -24,6 +24,8 @@ import { getOrdenes } from "../services/ordenesService";
 import { createOrden } from "../services/ordenesService";
 import { deleteOrden, updateOrden } from "../services/ordenesService";
 import { completarOrden } from "../services/ordenesService";
+import { Select, Option } from "@ui5/webcomponents-react";
+
 
 
 
@@ -50,12 +52,12 @@ export default function Ordenes() {
   });
 
   const [nuevoProducto, setNuevoProducto] = useState({
-    producto: "",   // antes era "nombre"
+    producto: "arrachera",
     cantidad: "",
     precio: "",
     fecha_caducidad: ""
   });
-
+  
 
   const loadOrdenes = async () => {
     const data = await getOrdenes();
@@ -307,11 +309,16 @@ export default function Ordenes() {
 
             {/* Sección de productos */}
             <Title level="H6">Producto a agregar</Title>
-            <Input
-              placeholder="Producto"
-              value={nuevoProducto.producto}
-              onInput={(e) => setNuevoProducto({ ...nuevoProducto, producto: e.target.value })}
-            />
+            <Select
+              onChange={(e) =>
+                setNuevoProducto({ ...nuevoProducto, producto: e.target.selectedOption.textContent })
+              }
+            >
+              <Option selected={nuevoProducto.producto === "arrachera"}>arrachera</Option>
+              <Option selected={nuevoProducto.producto === "ribeye"}>ribeye</Option>
+              <Option selected={nuevoProducto.producto === "tomahawk"}>tomahawk</Option>
+              <Option selected={nuevoProducto.producto === "diezmillo"}>diezmillo</Option>
+            </Select>
             <Input
               placeholder="Cantidad"
               value={nuevoProducto.cantidad}

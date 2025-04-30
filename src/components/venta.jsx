@@ -22,7 +22,8 @@ import "@ui5/webcomponents-icons/dist/delete.js";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getVentas, venderProductos, eliminarVenta } from "../services/ventaService";
-import { editarVenta } from "../services/ventaService"; 
+import { editarVenta } from "../services/ventaService";
+import { Select, Option } from "@ui5/webcomponents-react";
 
 export default function Venta() {
   const navigate = useNavigate();
@@ -33,7 +34,11 @@ export default function Venta() {
   const [ventaEditar, setVentaEditar] = useState(null);
   const [detalleVenta, setDetalleVenta] = useState(null);
   const [nuevaVenta, setNuevaVenta] = useState({ productos: [] });
-  const [nuevoProducto, setNuevoProducto] = useState({ nombre: "", cantidad: "", costo_unitario: "" });
+  const [nuevoProducto, setNuevoProducto] = useState({
+    nombre: "arrachera",
+    cantidad: "",
+    costo_unitario: ""
+  });
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
@@ -58,15 +63,21 @@ export default function Venta() {
 
   const agregarVenta = async () => {
     try {
-      const productosParaEnviar = nuevaVenta.productos.map((p) => ({
-        producto: p.nombre,
-        cantidad: parseInt(p.cantidad)
-      }));
+      const productosParaEnviar = nuevaVenta.productos
+        .filter(p => p.nombre && !isNaN(parseInt(p.cantidad)))
+        .map(p => ({
+          producto: p.nombre,
+          cantidad: parseInt(p.cantidad)
+        }));
+
+      if (productosParaEnviar.length === 0) {
+        alert("⚠️ Agrega al menos un producto válido con nombre y cantidad.");
+        return;
+      }
 
       const response = await venderProductos(productosParaEnviar);
 
-      console.log("✅ Venta realizada:", response);
-      alert(`Venta realizada exitosamente. ID de venta: ${response.id_venta}`);
+      alert(`✅ Venta realizada exitosamente. ID de venta: ${response.id_venta}`);
 
       setVentas([...ventas, {
         id: response.id_venta,
@@ -77,9 +88,11 @@ export default function Venta() {
 
       setNuevaVenta({ productos: [] });
     } catch (error) {
-      alert("Error al realizar la venta. Inténtalo de nuevo.");
+      const msg = error.response?.data?.error || "Error al realizar la venta.";
+      alert(`❌ ${msg}`);
     }
   };
+
 
   const eliminarVentas = async () => {
     try {
@@ -103,9 +116,9 @@ export default function Venta() {
         cantidad: parseInt(p.cantidad),
         costo_unitario: parseFloat(p.costo_unitario)
       }));
-  
+
       const response = await editarVenta(ventaEditar.id, productosParaEnviar);
-  
+
       const ventasActualizadas = ventas.map((v) => {
         if (v.id === ventaEditar.id) {
           return {
@@ -117,12 +130,12 @@ export default function Venta() {
         }
         return v;
       });
-  
+
       setVentas(ventasActualizadas);
       setOpenEditar(false);
       setVentaEditar(null);
       setVentasSeleccionadas([]);
-  
+
       alert(`Venta ${ventaEditar.id} actualizada correctamente`);
     } catch (error) {
       alert("Error al actualizar la venta");
@@ -215,7 +228,16 @@ export default function Venta() {
             {nuevaVenta.productos.map((p, i) => (
               <div key={i}>• {p.nombre} - {p.cantidad} x ${p.costo_unitario}</div>
             ))}
-            <Input placeholder="Producto" value={nuevoProducto.nombre} onInput={(e) => setNuevoProducto({ ...nuevoProducto, nombre: e.target.value })} />
+            <Select
+              onChange={(e) =>
+                setNuevoProducto({ ...nuevoProducto, nombre: e.target.selectedOption.textContent })
+              }
+            >
+              <Option selected={nuevoProducto.nombre === "arrachera"}>arrachera</Option>
+              <Option selected={nuevoProducto.nombre === "ribeye"}>ribeye</Option>
+              <Option selected={nuevoProducto.nombre === "tomahawk"}>tomahawk</Option>
+              <Option selected={nuevoProducto.nombre === "diezmillo"}>diezmillo</Option>
+            </Select>
             <Input placeholder="Cantidad" value={nuevoProducto.cantidad} onInput={(e) => setNuevoProducto({ ...nuevoProducto, cantidad: e.target.value })} />
             <Input placeholder="Costo Unitario" value={nuevoProducto.costo_unitario} onInput={(e) => setNuevoProducto({ ...nuevoProducto, costo_unitario: e.target.value })} />
             <Button onClick={agregarProducto} design="Transparent">Agregar producto</Button>
@@ -235,11 +257,14 @@ export default function Venta() {
               <Title level="H6">Editar Productos</Title>
               {ventaEditar.productos.map((p, i) => (
                 <FlexBox key={i} direction="Row" style={{ gap: "0.5rem" }}>
-                  <Input
-                    value={p.nombre}
-                    placeholder="Producto"
-                    onInput={(e) => actualizarProductoEdicion(i, 'nombre', e.target.value)}
-                  />
+                  <Select
+                    onChange={(e) => actualizarProductoEdicion(i, 'nombre', e.target.selectedOption.textContent)}
+                  >
+                    <Option selected={p.nombre === "arrachera"}>arrachera</Option>
+                    <Option selected={p.nombre === "ribeye"}>ribeye</Option>
+                    <Option selected={p.nombre === "tomahawk"}>tomahawk</Option>
+                    <Option selected={p.nombre === "diezmillo"}>diezmillo</Option>
+                  </Select>
                   <Input
                     value={p.cantidad}
                     placeholder="Cantidad"
